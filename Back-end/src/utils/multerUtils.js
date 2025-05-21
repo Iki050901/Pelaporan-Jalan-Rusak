@@ -1,36 +1,48 @@
-import {convertDateTimeLocale} from "./dateTimeUtils.js";
-import * as path from "node:path";
 import multer from "multer";
-import fs from "node:fs";
-import {ResponseError} from "../error/response-error.js";
+import path from "path";
+import fs from "fs";
+import { ResponseError } from "../error/response-error.js";
+
+const imageFolder = process.env.FILE_UPLOAD_REPORT_IMAGES;
+const videoFolder = process.env.FILE_UPLOAD_REPORT_VIDEOS;
+
+fs.mkdirSync(imageFolder, { recursive: true });
+fs.mkdirSync(videoFolder, { recursive: true });
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const folderPath = process.env.FILE_UPLOAD_PRODUCT
-
-        if (!fs.existsSync(folderPath)) {
-            fs.mkdirSync(folderPath, { recursive: true });
+    destination: function (req, file, cb) {
+        if (file.fieldname === 'video') {
+            cb(null, videoFolder);
+        } else if (file.fieldname === 'images[]') {
+            cb(null, imageFolder);
+        } else {
+            cb(new ResponseError(400, 'Unknown file field!'), null);
         }
-
-        cb(null, folderPath);
     },
     filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() / 1E9);
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
-})
+});
 
-export const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: function (req, file, cb) {
-        const fileTypes = /jpeg|jpg|png|webp/;
-        const mimeType = fileTypes.test(file.mimetype);
-        const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
-
-        if (mimeType && extname) {
-            return cb(null, true);
-        }
-        cb(new ResponseError(400, 'Only image files are allowed!'));
+const fileFilter = (req, file, cb) => {
+    if (file.fieldname === 'images[]') {
+        const imageTypes = /jpeg|jpg|png|webp/;
+        const isValid = imageTypes.test(file.mimetype) && imageTypes.test(path.extname(file.originalname).toLowerCase());
+        return isValid ? cb(null, true) : cb(new ResponseError(400, 'Only image files are allowed!'));
     }
-})
+
+    if (file.fieldname === 'video') {
+        const videoTypes = /mp4|mkv/;
+        const isValid = videoTypes.test(file.mimetype) && videoTypes.test(path.extname(file.originalname).toLowerCase());
+        return isValid ? cb(null, true) : cb(new ResponseError(400, 'Only video files are allowed!'));
+    }
+
+    cb(new ResponseError(400, 'Invalid file field!'));
+};
+
+export const uploadReport = multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // max 10MB
+    fileFilter,
+});

@@ -1,10 +1,9 @@
-import {v7 as uuid} from "uuid";
-import axios from "axios";
+import {prismaClient} from "../application/database.js";
 import {logger} from "../application/logging.js";
+import {v7 as uuid} from 'uuid';
 
 export const authMiddleware = async (req, res, next) => {
     const token = req.get('Authorization');
-
     if (!token) {
         const requestId = uuid().toString()
         return res.status(401).json({
@@ -14,26 +13,41 @@ export const authMiddleware = async (req, res, next) => {
     }
 
     try {
-        const response = await axios.post(`${process.env.URL_REQ}/api/validate/auth`,{
-            token
+        const tokenData = await prismaClient.token.findFirst({
+            where: {
+                token: token,
+                expired_at: { gt: new Date() }
+            },
+            select: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        number_phone: true,
+                        role: true,
+                        refresh_token: true,
+                    }
+                },
+                token: true,
+            }
         })
-
-        if (!response.data.data) {
+        if (!tokenData) {
             const requestId = uuid().toString()
-            return res.status(400).json({
+            return res.status(401).json({
                 request_id: requestId,
-                errors: 'Unauthorized: Invalid Token',
-            });
+                errors: "Unauthorized: Invalid Token",
+            })
         }
-
-        req.user = response.data.data.user;
+        req.user = tokenData.user;
+        req.user.token = tokenData.token;
         next();
-    } catch (error) {
-        logger.info(error)
+    } catch (e) {
+        logger.error(e.message);
         const requestId = uuid().toString()
-        res.status(500).json({
+        return res.status(500).json({
             request_id: requestId,
-            errors: 'Unauthorized: No token provided',
+            errors: "Internal Server Error",
         })
     }
 }

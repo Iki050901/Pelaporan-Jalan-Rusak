@@ -8,15 +8,16 @@ datasource db {
 }
 
 model Users {
-  id               String       @id @default(uuid()) @db.VarChar(255)
-  name             String       @db.VarChar(255)
-  email            String       @unique @db.VarChar(255)
-  number_phone     String       @unique @db.Char(14)
-  password         String       @db.VarChar(255)
-  refresh_token_id String       @db.VarChar(255)
+  id               String        @id @default(uuid()) @db.VarChar(255)
+  name             String        @db.VarChar(255)
+  email            String        @unique @db.VarChar(255)
+  number_phone     String        @unique @db.Char(14)
+  password         String        @db.VarChar(255)
+  refresh_token_id String?       @db.VarChar(255)
   role_id          Int
-  refresh_token    RefreshToken @relation(fields: [refresh_token_id], references: [id])
-  role             Roles        @relation(fields: [role_id], references: [id])
+  is_delete        Boolean       @default(false) @db.TinyInt
+  refresh_token    RefreshToken? @relation(fields: [refresh_token_id], references: [id])
+  role             Roles         @relation(fields: [role_id], references: [id])
   Token            Token[]
   Reports          Reports[]
   Comments         Comments[]
@@ -27,7 +28,7 @@ model Users {
 model Token {
   id         String   @id @default(uuid()) @db.VarChar(255)
   token      String   @db.VarChar(255)
-  created_at DateTime @db.Timestamp(0)
+  created_at DateTime @default(now()) @db.Timestamp(0)
   expired_at DateTime @db.Timestamp(0)
   email      String   @db.VarChar(255)
   user_id    String   @db.VarChar(255)
@@ -74,6 +75,8 @@ model Reports {
   user_id              String           @db.VarChar(255)
   created_at           DateTime         @default(now()) @db.Timestamp(0)
   updated_at           DateTime         @default(now()) @db.Timestamp(0)
+  is_delete            Boolean          @default(false) @db.TinyInt
+  notes                String?          @db.TinyText
   validation_stat_id   Int
   damage_level_id      Int
   user                 Users            @relation(fields: [user_id], references: [id])
