@@ -11,7 +11,6 @@ export default function Banner({ login = false }) {
         router.push('/login');
     }
 
-
     const [isLogin, setIsLogin] = useState(login);
 
     return (

@@ -1,9 +1,13 @@
+"use client";
+
 import ReportCard from "@/components/ReportCard";
+import {useRouter} from "next/navigation";
 
 export default function Dashboard() {
 
-    const handleView = () => alert('Lihat detail laporan');
-    const handleComment = () => alert('Komentar pada laporan');
+    const router = useRouter();
+
+    const handleView = () => router.push('/dashboard/detail');
 
     return (
         <main>
@@ -16,7 +20,6 @@ export default function Dashboard() {
                     description='Terdapat lubang besar di tengah jalan yang sangat membahayakan pengendara motor saat malam hari...'
                     date="4 Mei 2025"
                     onView={handleView}
-                    onComment={handleComment}
                 />
             </div>
         </main>

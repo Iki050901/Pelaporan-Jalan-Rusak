@@ -2,8 +2,9 @@
 
 import { faUser, faCalendar, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faWhatsapp} from "@fortawesome/free-brands-svg-icons";
 
-export default function ReportCard({ title, location, description, date, status, user, onView, onComment }) {
+export default function ReportCard({ title, location, description, date, status, user, onView }) {
     return (
         <div className="flex justify-between items-start bg-white rounded-xl shadow-md p-8 mb-4">
             {/* Info section */}
@@ -35,11 +36,8 @@ export default function ReportCard({ title, location, description, date, status,
                 >
                     👁️ Lihat
                 </button>
-                <button
-                    onClick={onComment}
-                    className="bg-blue-600 text-white text-sm px-4 py-1.5 rounded hover:bg-blue-700"
-                >
-                    💬 Komentar
+                <button className="bg-green-400 text-sm px-3 py-2 rounded-full hover:bg-green-800">
+                    <a href={`https://wa.me/${user.number_phone}`} className="text-white font-medium"><FontAwesomeIcon icon={faWhatsapp} size="xl" /></a>
                 </button>
             </div>
         </div>

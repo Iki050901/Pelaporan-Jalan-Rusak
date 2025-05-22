@@ -1,5 +1,4 @@
-import {useState} from "react";
-import Modal from "@/components/Modal";
+import {useRouter} from "next/navigation";
 
 
 export default function Report() {
@@ -25,30 +24,25 @@ export default function Report() {
         },
     ];
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editData, setEditData] = useState(null);
+    const router = useRouter();
 
-    const openAddModal = () => {
-        setEditData(null);
-        setIsModalOpen(true);
+    const handleCreateClick = () => {
+        router.push('/report/create');
     }
 
-    const openEditModal = (rowData) => {
-        setEditData(rowData);
-        setIsModalOpen(true);
-    };
+    const handleEditClick = () => {
+        router.push('/report/update');
+    }
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log("Submitted:", editData);
-        setIsModalOpen(false);
-    };
+    const handleDetailClick = () => {
+        router.push('/report/detail');
+    }
 
     return (
         <>
             <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
                 <div className="sm:flex sm:items-center justify-between">
-                    <button onClick={openAddModal} className="mt-4 sm:mt-0 inline-flex items-center rounded-md bg-blue-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-900">
+                    <button onClick={handleCreateClick} className="mt-4 sm:mt-0 inline-flex items-center rounded-md bg-blue-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-900">
                         + Tambah Laporan
                     </button>
                 </div>
@@ -87,10 +81,10 @@ export default function Report() {
                                         <img src={report.image} alt="foto jalan" className="w-16 h-16 rounded object-cover" />
                                     </td>
                                     <td className="whitespace-nowrap px-2 py-4 text-right text-sm">
-                                        <a href="#" onClick={() => openEditModal({ name: "Jalan Mangga", location: "Bandung" })}  className="text-blue-800 hover:text-blue-900 font-medium">Edit</a>
+                                        <a href="#" onClick={handleEditClick}  className="text-blue-800 hover:text-blue-900 font-medium">Edit</a>
                                     </td>
                                     <td className="whitespace-nowrap px-2 py-2 text-right text-sm">
-                                        <a href="#" onClick={() => openEditModal({ name: "Jalan Mangga", location: "Bandung" })}  className="text-blue-800 hover:text-blue-900 font-medium">Detail</a>
+                                        <a href="#" onClick={handleDetailClick}  className="text-blue-800 hover:text-blue-900 font-medium">Detail</a>
                                     </td>
                                 </tr>
                             ))}
@@ -99,34 +93,6 @@ export default function Report() {
                     </div>
                 </div>
             </div>
-
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block">Nama Jalan</label>
-                        <input
-                            type="text"
-                            value={editData?.name || ""}
-                            onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                            className="w-full border px-3 py-2 rounded"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block">Lokasi</label>
-                        <input
-                            type="text"
-                            value={editData?.location || ""}
-                            onChange={(e) => setEditData({ ...editData, location: e.target.value })}
-                            className="w-full border px-3 py-2 rounded"
-                            required
-                        />
-                    </div>
-                    <div className="flex justify-end">
-                        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">Simpan</button>
-                    </div>
-                </form>
-            </Modal>
         </>
     )
 }

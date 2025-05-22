@@ -1,12 +1,12 @@
 "use client";
 
+import ReportContent from "@/components/ReportContent";
+import {useRouter, useSearchParams} from "next/navigation";
+import {useState} from "react";
 import NavAdmin from "@/components/NavAdmin";
 import HeaderAdmin from "@/components/HeaderAdmin";
-import Dashboard from "@/components/Dashboard";
-import {useState} from "react";
-import {useRouter, useSearchParams} from "next/navigation";
 
-export default function DashboardPage() {
+export default function DetailPage() {
 
     const searchParams =  useSearchParams();
     const router = useRouter();
@@ -20,10 +20,12 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-full">
+        <div className="bg-gray-100 min-h-full ">
             <NavAdmin onMenuClick={handleMenuClick} active={activeSection}/>
-            <HeaderAdmin title={activeSection}/>
-            <Dashboard />
+            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 mt-10 shadow-lg bg-white ">
+                <ReportContent />
+            </div>
         </div>
+
     )
 }

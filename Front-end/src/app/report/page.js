@@ -1,18 +1,21 @@
 "use client";
 
+import {useRouter, useSearchParams} from "next/navigation";
+import {useState} from "react";
+import Dashboard from "@/components/Dashboard";
+import Report from "@/components/Report";
+import ReportHistory from "@/components/ReportHistory";
 import NavAdmin from "@/components/NavAdmin";
 import HeaderAdmin from "@/components/HeaderAdmin";
-import Dashboard from "@/components/Dashboard";
-import {useState} from "react";
-import {useRouter, useSearchParams} from "next/navigation";
 
-export default function DashboardPage() {
+
+export default function ReportPage() {
 
     const searchParams =  useSearchParams();
     const router = useRouter();
-    const sectionParam = searchParams.get("path");
+    const sectionParam = searchParams.get("section");
 
-    const [activeSection, setActiveSection] = useState(sectionParam || "dashboard");
+    const [activeSection, setActiveSection] = useState(sectionParam || "report");
 
     const handleMenuClick = (sectionName) => {
         setActiveSection(sectionName);
@@ -23,7 +26,7 @@ export default function DashboardPage() {
         <div className="min-h-full">
             <NavAdmin onMenuClick={handleMenuClick} active={activeSection}/>
             <HeaderAdmin title={activeSection}/>
-            <Dashboard />
+            <Report />
         </div>
     )
 }

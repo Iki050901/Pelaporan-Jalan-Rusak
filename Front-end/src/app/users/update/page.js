@@ -1,18 +1,21 @@
 "use client";
 
+import 'leaflet/dist/leaflet.css';
+import {useRouter, useSearchParams} from "next/navigation";
+import {useState} from "react";
 import NavAdmin from "@/components/NavAdmin";
 import HeaderAdmin from "@/components/HeaderAdmin";
-import Dashboard from "@/components/Dashboard";
-import {useState} from "react";
-import {useRouter, useSearchParams} from "next/navigation";
+import ReportForm from "@/components/ReportForm";
+import UsersForm from "@/components/UsersForm";
 
-export default function DashboardPage() {
+
+export default function ReportFormPage() {
 
     const searchParams =  useSearchParams();
     const router = useRouter();
     const sectionParam = searchParams.get("path");
 
-    const [activeSection, setActiveSection] = useState(sectionParam || "dashboard");
+    const [activeSection, setActiveSection] = useState(sectionParam || "users");
 
     const handleMenuClick = (sectionName) => {
         setActiveSection(sectionName);
@@ -22,8 +25,8 @@ export default function DashboardPage() {
     return (
         <div className="min-h-full">
             <NavAdmin onMenuClick={handleMenuClick} active={activeSection}/>
-            <HeaderAdmin title={activeSection}/>
-            <Dashboard />
+            <HeaderAdmin title={"Buat Pengguna"}/>
+            <UsersForm />
         </div>
-    )
+    );
 }
