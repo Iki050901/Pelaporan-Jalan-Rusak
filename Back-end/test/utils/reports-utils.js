@@ -7,6 +7,7 @@ export const reportData = async () => {
         desc: "Jalan Rusak di Jln. Merdeka, bisa menyebabkan kecelakaan di jalan",
         lat: "-6.203333",
         long: "106.823333",
+        location: "Jalan Merdeka",
         damage_level_id: 2,
     }
 }
@@ -23,6 +24,7 @@ export const createReportData = async (kecamatan = false, pupr = false) => {
             desc: "Jalan Rusak di Jln. Nasution, susah untuk dilewati",
             lat: -6.203333,
             long: 106.823333,
+            location: "Jalan Nasution",
             damage_level: {
                 connect: {
                     id: 3

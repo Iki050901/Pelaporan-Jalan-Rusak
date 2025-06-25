@@ -80,10 +80,10 @@ const update = async (request) => {
     }
 
     if (userInDatabase) {
-        if (userInDatabase.number_phone === user.number_phone) {
+        if (userInDatabase.number_phone === user.number_phone && userInDatabase.id !== user.id) {
             throw new ResponseError('No. Handphone telah terdaftar !')
         }
-        if (userInDatabase.email === user.email) {
+        if (userInDatabase.email === user.email && userInDatabase.id !== user.id) {
             throw new ResponseError('Email telah terdaftar !')
         }
     }
@@ -220,6 +220,8 @@ const get = async (userId) => {
 
     return users;
 }
+
+
 
 export default {
     create,

@@ -1,6 +1,7 @@
 import "@/app/globals.css"
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
+import {UserProvider} from "@/context/UserContext";
 config.autoAddCss = false
 
 export const metadata = {
@@ -11,7 +12,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
     return (
         <html lang="id">
-        <body className="bg-gray-50 font-sans">{children}</body>
+            <body className="bg-gray-50 font-sans">
+                <UserProvider>
+                    {children}
+                </UserProvider>
+            </body>
         </html>
     );
 }

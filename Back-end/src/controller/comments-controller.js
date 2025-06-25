@@ -3,8 +3,9 @@ import commentsService from "../service/comments-service.js";
 const create = async (req, res, next) => {
     try {
         const request = req.body;
-        request.report_id = req.params.report_id;
+        const reportId = req.params.report_id;
         request.user_id = req.user.id;
+        request.report_id = reportId;
         const result = await commentsService.create(request);
         res.status(200).json({
             data: result,

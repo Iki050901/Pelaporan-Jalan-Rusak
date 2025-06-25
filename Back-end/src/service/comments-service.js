@@ -2,6 +2,7 @@ import {validate} from "../validation/validate.js";
 import {createCommentValidation, getCommentValidation} from "../validation/comment-validation.js";
 import {prismaClient} from "../application/database.js";
 import {ResponseError} from "../error/response-error.js";
+import moment from "moment-timezone";
 
 const create = async (request) => {
     const comment = validate(createCommentValidation, request)
@@ -100,6 +101,7 @@ const list = async (limit, page, latest, report_id) => {
                     id: true,
                     name: true,
                     number_phone: true,
+                    role_id: true,
                 }
             },
             comment: true,
@@ -116,8 +118,32 @@ const list = async (limit, page, latest, report_id) => {
 
     const totalPages = Math.ceil(totalComments / pageSize);
 
+    const setAvatar = (roleId) => {
+        switch (roleId) {
+            case 1:
+                return "https://avatar.iran.liara.run/public/job/operator/male";
+            case 2:
+                return "https://avatar.iran.liara.run/public/24";
+            case 3:
+                return "https://avatar.iran.liara.run/public/42";
+            default:
+                return "https://avatar.iran.liara.run/public/42";
+        }
+    }
+
+    const createdAtConvert = comments.map(comment => {
+        return {
+            ...comment,
+            created_at : moment(comment.created_at).tz("Asia/Jakarta").locale('id').format('DD MMMM YYYY'),
+            user: {
+                ...comment.user,
+                avatar: setAvatar(comment.user.role_id),
+            }
+        };
+    });
+
     return {
-        comments: comments,
+        comments: createdAtConvert,
         total_pages: totalPages,
         current_page: page,
         page_size: pageSize,

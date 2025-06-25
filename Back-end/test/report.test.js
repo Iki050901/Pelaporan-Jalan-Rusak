@@ -374,5 +374,49 @@ describe('PUT /api/pupr/report/validate/:report_id/:validate_id', () => {
         expect(result.body.data.validation_status.id).toBe(6)
         expect(result.body.data.validation_status.status).toBeDefined()
     })
+})
 
+describe('GET /api/report/dashboard', () => {
+
+    beforeEach(async () => {
+        await createTestUser()
+        await createReportData()
+    })
+
+    afterEach(async () => {
+        await removeReportData();
+        await removeTestUser();
+    })
+
+    it('should accept get dashboard report', async () => {
+        const result = await supertest(web)
+            .get(`/api/report/dashboard`)
+
+        console.log(result.body)
+
+        expect(result.status).toBe(200)
+    })
+})
+
+
+describe('GET /api/report/dashboard/by-level', () => {
+
+    beforeEach(async () => {
+        await createTestUser()
+        await createReportData()
+    })
+
+    afterEach(async () => {
+        await removeReportData();
+        await removeTestUser();
+    })
+
+    it('should accept get dashboard report by level', async () => {
+        const result = await supertest(web)
+            .get(`/api/report/dashboard/by-level`)
+
+        console.log(result.body)
+
+        expect(result.status).toBe(200)
+    })
 })

@@ -13,7 +13,7 @@ export default function ReportFormPage() {
 
     const searchParams =  useSearchParams();
     const router = useRouter();
-    const sectionParam = searchParams.get("path"); 
+    const sectionParam = searchParams.get("path");
 
     const [activeSection, setActiveSection] = useState(sectionParam || "users");
 

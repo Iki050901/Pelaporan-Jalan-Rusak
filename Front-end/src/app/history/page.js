@@ -2,8 +2,6 @@
 
 import {useRouter, useSearchParams} from "next/navigation";
 import {useState} from "react";
-import Dashboard from "@/components/Dashboard";
-import Report from "@/components/Report";
 import ReportHistory from "@/components/ReportHistory";
 import NavAdmin from "@/components/NavAdmin";
 import HeaderAdmin from "@/components/HeaderAdmin";

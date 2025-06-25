@@ -1,6 +1,6 @@
 import {
     getUserValidation,
-    loginUserValidation,
+    loginUserValidation, loginWithGoogleUserValidation,
     registerUserValidation,
     updateUserValidation
 } from "../validation/auth-validation.js";
@@ -246,10 +246,7 @@ const update = async (request) => {
 
     if (userInDatabase) {
         if (userInDatabase.number_phone === user.number_phone) {
-            throw new ResponseError('No. Handphone telah terdaftar !')
-        }
-        if (userInDatabase.email === user.email) {
-            throw new ResponseError('Email telah terdaftar !')
+            throw new ResponseError( 400,'No. Handphone telah terdaftar !')
         }
     }
 
@@ -289,6 +286,126 @@ const update = async (request) => {
             number_phone: true,
         }
     })
+}
+
+const loginGoogle = async (request) => {
+    const user = validate(loginWithGoogleUserValidation, request);
+
+    let userInDatabase = await prismaClient.users.findUnique({
+        where: {
+            email: user.email
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            number_phone: true,
+            refresh_token: true,
+            refresh_token_id: true,
+            is_delete: true,
+            role_id: true,
+        }
+    })
+
+    if (!userInDatabase) {
+        userInDatabase = await prismaClient.users.create({
+            data: {
+                name: user.name,
+                email: user.email,
+                number_phone: user.number_phone,
+                google_id: user.google_id,
+                role: {
+                    connect: {
+                        id: 3
+                    }
+                }
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                number_phone: true,
+            }
+        })
+    }
+
+    const refreshToken = await generateRefreshToken({
+        email: user.email,
+    })
+
+    const token = await generateToken({
+        email: user.email,
+    })
+
+    if (userInDatabase.refresh_token_id) {
+        await prismaClient.refreshToken.delete({
+            where: {
+                id: userInDatabase.refresh_token_id,
+            }
+        })
+    }
+
+    const currentDateTime = await moment().tz('Asia/Jakarta').toDate();
+    const refreshTokenExpired = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    const tokenExpired = moment(currentDateTime)
+        .add(40, 'minutes')
+        .tz('Asia/Jakarta')
+        .toDate();
+
+    await prismaClient.users.update({
+        where: {
+            email: user.email,
+        },
+        data: {
+            refresh_token: {
+                create: {
+                    refresh_token: refreshToken,
+                    expired_at: refreshTokenExpired
+                }
+            }
+        }
+    })
+
+    const tokenCreate = await prismaClient.token.create({
+        data: {
+            token: token,
+            expired_at: tokenExpired,
+            email: user.email,
+            user: {
+                connect: {email: user.email}
+            }
+        },
+        select: {
+            id: true,
+            token: true,
+            expired_at: true,
+            email: true,
+        }
+    })
+
+    const getUser = await prismaClient.users.findFirst({
+        where: {
+            email: user.email,
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            number_phone: true,
+            refresh_token: {
+                select: {
+                    id: true,
+                    refresh_token: true,
+                    expired_at: true,
+                }
+            },
+            role_id: true,
+        }
+    })
+
+    getUser.token = tokenCreate
+
+    return getUser;
 }
 
 const logout = async (request) => {
@@ -472,6 +589,7 @@ const get = async (request) => {
             name: true,
             email: true,
             number_phone: true,
+            role: true,
             refresh_token: {
               select: {
                   refresh_token: true,
@@ -479,7 +597,6 @@ const get = async (request) => {
                   id: true,
               }
             },
-            role_id: true,
         }
     })
 
@@ -493,6 +610,7 @@ const get = async (request) => {
     }
 
     getUser.token = token;
+    getUser.avatar = 'https://avatar.iran.liara.run/public/42';
 
     return getUser;
 }
@@ -501,6 +619,7 @@ export default {
     register,
     update,
     login,
+    loginGoogle,
     logout,
     refresh,
     get

@@ -2,10 +2,24 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
+import {AuthService} from "@/services/auth.service";
+import {useUser} from "@/context/UserContext";
+import Image from "next/image";
 
-export default function NavAdmin({ onMenuClick, active }) {
+export default function NavAdmin({ onMenuClick, active}) {
+
+    const { userData, setUserData } = useUser();
+    const role = userData?.data?.role.role
+
+    const menuItems = [
+        { label: "Dashboard", key: "dashboard", roles: ["USER", "KECAMATAN", "PUPR"] },
+        { label: "Laporan", key: "report", roles: ["KECAMATAN", "PUPR", "USER"] },
+        { label: "Riwayat Laporan", key: "history", roles: ["USER", "KECAMATAN", "PUPR"] },
+        { label: "Manajemen Users", key: "users", roles: ["PUPR"] },
+    ];
 
     const [menuOpen, setMenuOpen] = useState(false)
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     
     const toggleMenu = () => setMenuOpen(!menuOpen);
 
@@ -14,6 +28,36 @@ export default function NavAdmin({ onMenuClick, active }) {
     const handleProfileClick = () => {
         router.push('/profile/update');
     }
+
+    const handleLogout = async () => {
+        await AuthService.logout();
+        setUserData(null);
+        router.push('/login');
+    }
+
+    const handleClick = (key) => {
+        if (onMenuClick) onMenuClick(key);
+    };
+
+    const renderMenu = (mobile = false) => {
+        return menuItems
+            .filter(item => item.roles.includes(role))
+            .map(item => (
+                <a
+                    key={item.key}
+                    href="#"
+                    onClick={() => handleClick(item.key)}
+                    className={`rounded-md px-3 py-2 text-sm font-medium ${mobile ? 'block text-base' : ''} ${
+                        active === item.key
+                            ? "bg-yellow-400 text-white"
+                            : "text-gray-300 hover:bg-yellow-500 hover:text-white"
+                    }`}
+                    aria-current={active === item.key ? "page" : undefined}
+                >
+                    {item.label}
+                </a>
+            ));
+    };
 
     return (
         <nav className="bg-blue-900 p-2">
@@ -25,38 +69,7 @@ export default function NavAdmin({ onMenuClick, active }) {
                         </div>
                         <div className="hidden md:block">
                             <div className="ml-10 flex items-baseline space-x-4">
-                                <a href="#"
-                                    className={`rounded-md px-3 py-2 text-sm font-medium ${
-                                        active === "dashboard"
-                                            ? "bg-yellow-400 text-white"
-                                            : "text-gray-300 hover:bg-yellow-500 hover:text-white"
-                                    }`}
-                                    aria-current={active === "dashboard" ? "page" : undefined}
-                                    onClick={() => onMenuClick("dashboard")}>Dashboard</a>
-                                <a href="#"
-                                    className={`rounded-md px-3 py-2 text-sm font-medium ${
-                                        active === "report"
-                                            ? "bg-yellow-400 text-white"
-                                            : "text-gray-300 hover:bg-yellow-500 hover:text-white"
-                                    }`}
-                                    aria-current={active === "report" ? "page" : undefined}
-                                    onClick={() => onMenuClick("report")}>Laporan</a>
-                                <a href="#"
-                                    className={`rounded-md px-3 py-2 text-sm font-medium ${
-                                        active === "history"
-                                            ? "bg-yellow-400 text-white"
-                                            : "text-gray-300 hover:bg-yellow-500 hover:text-white"
-                                    }`}
-                                    aria-current={active === "history" ? "page" : undefined}
-                                    onClick={() => onMenuClick("history")}>Riwayat Laporan</a>
-                                <a href="#"
-                                   className={`rounded-md px-3 py-2 text-sm font-medium ${
-                                       active === "users"
-                                           ? "bg-yellow-400 text-white"
-                                           : "text-gray-300 hover:bg-yellow-500 hover:text-white"
-                                   }`}
-                                   aria-current={active === "users" ? "page" : undefined}
-                                   onClick={() => onMenuClick("users")}>Manajemen Users</a>
+                                {renderMenu()}
                             </div>
                         </div>
                     </div>
@@ -70,10 +83,12 @@ export default function NavAdmin({ onMenuClick, active }) {
                                             id="user-menu-button" aria-expanded="false" aria-haspopup="true">
                                         <span className="absolute -inset-1.5"></span>
                                         <span className="sr-only">Open user menu</span>
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img className="size-8 rounded-full"
-                                             src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                             alt=""/>
+                                        <Image className="size-10 rounded-full"
+                                               src={userData?.data?.avatar || "/images/default-avatar.png"}
+                                               width={40}
+                                               height={40}
+                                               unoptimized="false"
+                                               alt="Profile Image"/>
                                     </button>
                                 </div>
 
@@ -85,29 +100,42 @@ export default function NavAdmin({ onMenuClick, active }) {
                                     tabIndex="-1">
                                     <a href="#" onClick={handleProfileClick} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem"
                                        tabIndex="-1" id="user-menu-item-0">Your Profile</a>
-                                    <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem"
+                                    <a href="#" onClick={handleLogout} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem"
                                        tabIndex="-1" id="user-menu-item-2">Sign out</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div className="-mr-2 flex md:hidden">
-
-                        <button type="button"
-                                className="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
-                                aria-controls="mobile-menu" aria-expanded="false">
-                            <span className="absolute -inset-0.5"></span>
+                        <button
+                            type="button"
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
+                            aria-controls="mobile-menu"
+                            aria-expanded={mobileMenuOpen}
+                        >
                             <span className="sr-only">Open main menu</span>
 
-                            <svg className="block size-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5"
-                                 stroke="currentColor" aria-hidden="true" data-slot="icon">
-                                <path strokeLinecap="round" strokeLinejoin="round"
-                                      d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                            <svg
+                                className={`${mobileMenuOpen ? 'hidden' : 'block'} size-6`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                             </svg>
 
-                            <svg className="hidden size-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5"
-                                 stroke="currentColor" aria-hidden="true" data-slot="icon">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                            <svg
+                                className={`${mobileMenuOpen ? 'block' : 'hidden'} size-6`}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
@@ -115,56 +143,51 @@ export default function NavAdmin({ onMenuClick, active }) {
             </div>
 
 
-            <div className="md:hidden" id="mobile-menu">
-                <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
-                    <a href="#"
-                       className={`block rounded-md px-3 py-2 text-base font-medium  ${
-                           active === "Dashboard"
-                               ? "bg-yellow-400 text-white"
-                               : "text-gray-300 hover:bg-yellow-500 hover:text-white"
-                       }`}
-                       aria-current={active === "Dashboard" ? "page" : undefined}
-                       onClick={() => onMenuClick("Dashboard")}>Dashboard</a>
-                    <a href="#"
-                       className={`block rounded-md px-3 py-2 text-base font-medium  ${
-                           active === "Report"
-                               ? "bg-yellow-400 text-white"
-                               : "text-gray-300 hover:bg-yellow-500 hover:text-white"
-                       }`}
-                       aria-current={active === "Report" ? "page" : undefined}
-                       onClick={() => onMenuClick("Report")}>Laporan</a>
-                    <a href="#"
-                       className={`block rounded-md px-3 py-2 text-base font-medium  ${
-                           active === "History"
-                               ? "bg-yellow-400 text-white"
-                               : "text-gray-300 hover:bg-yellow-500 hover:text-white"
-                       }`}
-                       aria-current={active === "History" ? "page" : undefined}
-                       onClick={() => onMenuClick("History")}>Riwayat Laporan</a>
-                </div>
-                <div className="border-t border-gray-700 pt-4 pb-3">
-                    <div className="flex items-center px-5">
-                        <div className="shrink-0">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img className="size-10 rounded-full"
-                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                 alt=""/>
+            {mobileMenuOpen && (
+                <div
+                    id="mobile-menu"
+                    className={`transform transition-all duration-300 ease-in-out overflow-hidden ${
+                        mobileMenuOpen ? 'max-h-screen opacity-100 scale-100' : 'max-h-0 opacity-0 scale-95 pointer-events-none'
+                    }`}
+                >
+                    <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
+                        {renderMenu(true)}
+                    </div>
+                    <div className="border-t border-gray-700 pt-4 pb-3">
+                        <div className="flex items-center px-5">
+                            <div className="shrink-0">
+                                <Image
+                                    className="size-10 rounded-full"
+                                    src={userData?.data?.avatar || "/images/default-avatar.png"}
+                                    width={40}
+                                    height={40}
+                                    alt="Profile Image"
+                                />
+                            </div>
+                            <div className="ml-3">
+                                <div className="text-base font-medium text-white">{userData?.data?.name}</div>
+                                <div className="text-sm font-medium text-gray-400">{userData?.data?.email}</div>
+                            </div>
                         </div>
-                        <div className="ml-3">
-                            <div className="text-base/5 font-medium text-white">Acull</div>
-                            <div className="text-sm font-medium text-gray-400">acull@example.com</div>
+                        <div className="mt-3 space-y-1 px-2">
+                            <a
+                                href="#"
+                                onClick={handleProfileClick}
+                                className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                            >
+                                Your Profile
+                            </a>
+                            <a
+                                href="#"
+                                onClick={handleLogout}
+                                className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                            >
+                                Sign out
+                            </a>
                         </div>
                     </div>
-                    <div className="mt-3 space-y-1 px-2">
-                        <a href="#" onClick={handleProfileClick}
-                           className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white">Your
-                            Profile</a>
-                        <a href="#"
-                           className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white">Sign
-                            out</a>
-                    </div>
                 </div>
-            </div>
+            )}
         </nav>
     )
 }

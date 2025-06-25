@@ -13,6 +13,7 @@ const createReportValidation = Joi.object({
     user_id: Joi.string().required(),
     title: Joi.string().required().max(255),
     desc: Joi.string().required(),
+    location: Joi.string().required(),
     lat: Joi.string().required().custom((value, helpers) => {
         const parsed = parseFloat(value);
         if (isNaN(parsed) || parsed < -90 || parsed > 90) {
@@ -29,13 +30,14 @@ const createReportValidation = Joi.object({
     }, 'Longitude validation'),
     damage_level_id: Joi.number().required(),
     images: Joi.array().items(fileSchema).required().max(5).required(),
-    videos: Joi.object().required()
+    video: Joi.object().required()
 })
 
 const updateReportValidation = Joi.object({
     id: Joi.string().required(),
     title: Joi.string().max(255),
     desc: Joi.string(),
+    location: Joi.string().required(),
     lat: Joi.string().required().custom((value, helpers) => {
         const parsed = parseFloat(value);
         if (isNaN(parsed) || parsed < -90 || parsed > 90) {
@@ -53,7 +55,7 @@ const updateReportValidation = Joi.object({
     damage_level_id: Joi.number(),
     image_to_keep: Joi.array().items(imageKeepSchema),
     images: Joi.array().items(fileSchema).max(5),
-    videos: Joi.object()
+    video: Joi.object()
 })
 
 const getReportValidation = Joi.string().max(255)

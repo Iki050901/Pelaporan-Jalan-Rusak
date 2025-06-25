@@ -25,3 +25,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.ck-editor__editable {
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto !important;
+}
+
+/* Style the toolbar */
+.ck-toolbar {
+  border-radius: 0.375rem 0.375rem 0 0 !important;
+}
+
+/* Style the content area */
+.ck-editor__editable {
+  border-radius: 0 0 0.375rem 0.375rem !important;
+}
+
+/* Focus state */
+.ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
+  border-color: rgb(30 64 175) !important;
+  box-shadow: 0 0 0 2px rgb(30 64 175 / 0.1) !important;
+}

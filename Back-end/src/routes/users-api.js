@@ -16,20 +16,20 @@ usersRouter.put('/api/users/refresh', authMiddleware, rolesMiddleware(['USER', '
 
 // Report API
 usersRouter.post('/api/users/report/create',  uploadReport.fields([
-    { name: 'images[]', maxCount: 5 },
+    { name: 'images', maxCount: 5 },
     { name: 'video', maxCount: 1 },
 ]), authMiddleware, rolesMiddleware(['USER']), reportController.create)
 
 usersRouter.put('/api/users/report/update/:report_id', uploadReport.fields([
-    { name: 'images[]', maxCount: 5 },
+    { name: 'images', maxCount: 5 },
     { name: 'video', maxCount: 1 },
 ]), authMiddleware, rolesMiddleware(['USER']), reportController.update)
 
-usersRouter.delete('/api/report/remove/:report_id',  authMiddleware, rolesMiddleware(['USER']), reportController.remove)
-
+usersRouter.delete('/api/users/report/remove/:report_id',  authMiddleware, rolesMiddleware(['USER']), reportController.remove)
 usersRouter.get('/api/report/:report_id',  authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), reportController.get)
 usersRouter.get('/api/report', authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), reportController.list)
 
+// Comments API
 usersRouter.post('/api/report/:report_id/comments/create',  authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), commentsController.create)
 usersRouter.delete('/api/report/comments/remove/:comment_id',  authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), commentsController.remove)
 usersRouter.get('/api/report/:report_id/comments',  authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), commentsController.list)

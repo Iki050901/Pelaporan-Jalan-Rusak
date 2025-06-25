@@ -9,18 +9,28 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-react": "^9.5.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@headlessui/react": "^2.2.2",
+    "@react-oauth/google": "^0.12.2",
+    "axios": "^1.9.0",
+    "dompurify": "^3.2.6",
+    "dotenv": "^16.5.0",
     "fortawesome": "^0.0.1-security",
+    "joi": "^17.13.3",
+    "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
+    "leaflet-color-markers": "^0.1.0",
     "next": "15.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-fontawesome": "^1.7.1",
-    "react-leaflet": "^5.0.0"
+    "react-leaflet": "^5.0.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -22,6 +22,13 @@ const loginUserValidation = Joi.object({
     password: Joi.string().required().max(255),
 })
 
+const loginWithGoogleUserValidation = Joi.object({
+    email: Joi.string().required().max(255),
+    google_id: Joi.string().required().max(255),
+    name: Joi.string().required().max(255),
+    number_phone: Joi.string().optional().empty(''),
+})
+
 const getUserValidation = Joi.object({
     user_id: Joi.string().max(100).required(),
     token: Joi.string().required()
@@ -33,6 +40,7 @@ export {
     getTokenIdValidation,
     registerUserValidation,
     loginUserValidation,
+    loginWithGoogleUserValidation,
     getUserValidation,
     updateUserValidation
 }

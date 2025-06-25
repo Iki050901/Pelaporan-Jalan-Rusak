@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         if (file.fieldname === 'video') {
             cb(null, videoFolder);
-        } else if (file.fieldname === 'images[]') {
+        } else if (file.fieldname === 'images') {
             cb(null, imageFolder);
         } else {
             cb(new ResponseError(400, 'Unknown file field!'), null);
@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.fieldname === 'images[]') {
+    if (file.fieldname === 'images') {
         const imageTypes = /jpeg|jpg|png|webp/;
         const isValid = imageTypes.test(file.mimetype) && imageTypes.test(path.extname(file.originalname).toLowerCase());
         return isValid ? cb(null, true) : cb(new ResponseError(400, 'Only image files are allowed!'));
@@ -43,6 +43,6 @@ const fileFilter = (req, file, cb) => {
 
 export const uploadReport = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // max 10MB
+    limits: { fileSize: 20 * 1024 * 1024 }, // max 20MB
     fileFilter,
 });

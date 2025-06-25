@@ -22,6 +22,15 @@ const login = async (req, res, next) => {
     }
 }
 
+const loginGoogle = async (req, res, next) => {
+    try {
+        const user = await authService.loginGoogle(req.user);
+        res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${user.token.token}`);
+    } catch (e) {
+        next(e);
+    }
+}
+
 const update = async (req, res, next) => {
     try {
         const id = req.user.id;
@@ -79,6 +88,7 @@ export default {
     register,
     update,
     login,
+    loginGoogle,
     refresh,
     logout,
     get

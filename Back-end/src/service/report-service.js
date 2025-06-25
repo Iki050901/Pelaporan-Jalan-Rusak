@@ -11,6 +11,8 @@ import {DOMPurify} from "../utils/sanitizeUtils.js";
 import path from "node:path";
 import fs from "node:fs";
 import {logger} from "../application/logging.js";
+import axios from "axios";
+import moment from "moment-timezone";
 
 const create = async (request) => {
     const report = validate(createReportValidation, request);
@@ -28,15 +30,16 @@ const create = async (request) => {
     const sanitizeReportDesc = DOMPurify.sanitize(report.desc);
 
     let videoPathURL = null;
-    if (report.videos) {
+    if (report.video) {
         const uploadVideoPath = process.env.FILE_UPLOAD_REPORT_VIDEOS.replace(process.env.DELETE_PATH_UPLOAD, "");
-        videoPathURL = `${process.env.HOST}/${uploadVideoPath}/${report.videos.filename}`;
+        videoPathURL = `${process.env.DOMAIN}/${uploadVideoPath}/${report.video.filename}`;
     }
 
     const createReport = await prismaClient.reports.create({
         data: {
             title: report.title,
             desc: sanitizeReportDesc,
+            location: report.location,
             lat: report.lat,
             long: report.long,
             video_url: videoPathURL,
@@ -62,6 +65,7 @@ const create = async (request) => {
             id: true,
             title: true,
             desc: true,
+            location: true,
             lat: true,
             long: true,
             damage_level_id: true,
@@ -76,7 +80,7 @@ const create = async (request) => {
         const filePathUpload = process.env.FILE_UPLOAD_REPORT_IMAGES.replace(process.env.DELETE_PATH_UPLOAD, "");
         const imageData = report.images.map((image) => ({
             report_id: createReport.id,
-            image_url: `${process.env.HOST}/${filePathUpload}/${image.filename}`,
+            image_url: `${process.env.DOMAIN}/${filePathUpload}/${image.filename}`,
         }));
 
         await prismaClient.reportImages.createMany({
@@ -118,9 +122,11 @@ const update = async (request) => {
         throw new ResponseError(400, 'Tidak bisa di update karena sudah divalidasi oleh Kecamatan !')
     }
 
-    const oldVideosPath = reportInDatabase.video_url.replace(`${process.env.HOST}/`, "");
+    const oldVideosPath = reportInDatabase.video_url.replace(`${process.env.DOMAIN}/`, "");
     const newUploadVideoPath = process.env.FILE_UPLOAD_REPORT_VIDEOS.replace(process.env.DELETE_PATH_UPLOAD, "")
-    const newVideoPathURL = report.video_url ? `${process.env.HOST}/${newUploadVideoPath}/${report.video_url.filename}`: undefined;
+    const newVideoPathURL = report?.video?.filename
+        ? `${process.env.DOMAIN}/${newUploadVideoPath}/${report.video.filename}`
+        : undefined;
 
     if (newVideoPathURL && oldVideosPath && newVideoPathURL !== oldVideosPath) {
         const fullPath =  path.join(process.env.DELETE_PATH_UPLOAD, oldVideosPath.replace(/\\/g, '/'))
@@ -140,9 +146,12 @@ const update = async (request) => {
     const updateData = {
         title: report.title,
         desc: report.desc,
+        location: report.location,
         lat: report.lat,
         long: report.long,
         video_url: newVideoPathURL,
+        is_district_validate: false,
+        is_pupr_validate: false,
     }
 
     const updateReport = await prismaClient.reports.update({
@@ -156,12 +165,18 @@ const update = async (request) => {
                     id: report.damage_level_id
                 }
             },
+            validation_status: {
+                connect: {
+                    id: 1
+                }
+            },
             updated_at: new Date().toISOString(),
         },
         select: {
             id: true,
             title: true,
             desc: true,
+            location: true,
             lat: true,
             long: true,
             damage_level_id: true,
@@ -188,7 +203,7 @@ const update = async (request) => {
     const imagesToDelete = existingImages.filter(img => !report.image_to_keep.includes(img.id));
 
     for (const img of imagesToDelete) {
-        const deletedImage = img.image_url.replace(`${process.env.HOST}}/`, "");
+        const deletedImage = img.image_url.replace(`${process.env.DOMAIN}}/`, "");
         const fullPath = path.join(process.env.DELETE_PATH_UPLOAD, deletedImage)
         fs.unlink(fullPath, (err) => {
             if (err) {
@@ -204,7 +219,7 @@ const update = async (request) => {
     if (report.images && report.images.length > 0) {
         const reportImages = report.images.map(image => ({
             report_id: report.id,
-            image_url: `${process.env.HOST}/${newPathUpload}/${image.filename}`,
+            image_url: `${process.env.DOMAIN}/${newPathUpload}/${image.filename}`,
         }))
 
         await prismaClient.reportImages.createMany({
@@ -261,7 +276,7 @@ const remove = async (reportId) => {
     })
 }
 
-const list = async (limit, page, status, level_damage, user_id, role_id) => {
+const list = async (limit, page, status, level_damage, user_id, role_id, isTable = true) => {
 
     const userInDatabase = await prismaClient.users.findFirst({
         where: {
@@ -292,31 +307,57 @@ const list = async (limit, page, status, level_damage, user_id, role_id) => {
     page = page || 1;
     const pageSize = limit || 10;
 
+    let arrayStatus;
+    if (status) {
+        arrayStatus = status.split(',').map(Number);
+    }
+
     const whereClause = {
-        ...(status && ({validation_stat_id: status})),
-        ...(level_damage && ({damage_level_id: level_damage})),
-        ...(role_id === 3 && ({user_id: user_id})),
+        ...(Array.isArray(arrayStatus) && arrayStatus.length > 0
+                ? { validation_stat_id: { in: arrayStatus } }
+                : arrayStatus
+                    ? { validation_stat_id: arrayStatus }
+                    : {  }
+        ),
+        ...(level_damage && ({ damage_level_id: level_damage })),
+        ...(role_id === 3 && ({ user_id: user_id })),
         is_delete: false
+    };
+
+    const anotherWhereClause = {
+        ...(Array.isArray(arrayStatus) && arrayStatus.length > 0
+                ? { validation_stat_id: { in: arrayStatus } }
+                : arrayStatus
+                    ? { validation_stat_id: arrayStatus }
+                    : {  }
+        ),
+        ...(level_damage && { damage_level_id: level_damage }),
+        is_delete: false,
     };
 
     const reports = await prismaClient.reports.findMany({
         skip: (page - 1) * pageSize,
         take: pageSize,
-        where: whereClause,
+        where: isTable ? whereClause : anotherWhereClause,
         select: {
             id: true,
             title: true,
             desc: true,
             lat: true,
             long: true,
+            location: true,
             damage_level: true,
             validation_status: true,
+            is_district_validate: true,
+            is_pupr_validate: true,
             video_url: true,
+            user: true,
+            created_at: true
         }
     })
 
     const totalReports = await prismaClient.reports.count({
-        where: whereClause
+        where: isTable ? whereClause : anotherWhereClause,
     })
 
     const totalPages = Math.ceil(totalReports / pageSize);
@@ -338,6 +379,7 @@ const list = async (limit, page, status, level_damage, user_id, role_id) => {
         const images = reportImages.filter(img => img.report_id === report.id);
         return {
             ...report,
+            created_at : moment(report.created_at).tz("Asia/Jakarta").locale('id').format('DD MMMM YYYY'),
             report_images: images
         };
     });
@@ -364,7 +406,7 @@ const get = async (reportId) => {
         throw new ResponseError(404, 'Laporan tidak ditemukan !')
     }
 
-    return prismaClient.reports.findFirst({
+    const getReport = await prismaClient.reports.findFirst({
         where: {
             id: reportId
         },
@@ -372,8 +414,10 @@ const get = async (reportId) => {
             id: true,
             title: true,
             desc: true,
+            location: true,
             lat: true,
             long: true,
+            notes: true,
             damage_level: true,
             validation_status: true,
             is_pupr_validate: true,
@@ -392,6 +436,9 @@ const get = async (reportId) => {
             ReportImages: true,
         }
     })
+
+    getReport.created_at = moment(getReport.created_at).tz("Asia/Jakarta").locale('id').format('DD MMMM YYYY')
+    return getReport
 }
 
 const validateDistrict = async (report) => {
@@ -430,7 +477,7 @@ const validateDistrict = async (report) => {
             id: validateData.report_id,
         },
         data: {
-            ...(validateData.validation_stat_id === 3 && ({ is_district_validate: true })),
+            is_district_validate: true,
             validation_status: {
                 connect: {
                     id: validateData.validation_stat_id
@@ -500,6 +547,96 @@ const validatePupr = async (report) => {
     });
 }
 
+const reportDashboard = async () => {
+    const baseFilter = { is_delete: false };
+
+    const getReportCountByFilter = async (filter) => {
+        return prismaClient.reports.count({
+            where: {...baseFilter, ...filter}
+        });
+    };
+
+
+    const getDamageReportCounts = async (damageIds) => {
+        return Promise.all(
+            damageIds.map(id => getReportCountByFilter({ damage_level_id: id }))
+        );
+    };
+
+    const [
+        totalReport,
+        totalActiveReport,
+        ...damageReports
+    ] = await Promise.all([
+        getReportCountByFilter(),
+        getReportCountByFilter({validation_stat_id: 1}),
+        getReportCountByFilter({validation_stat_id: {in : [2, 3, 4]} }),
+        getReportCountByFilter({validation_stat_id: 5}),
+    ]);
+
+    return {
+        total_report: totalReport,
+        total_active_report: totalActiveReport,
+        total_report_process: damageReports[0],
+        total_report_done: damageReports[1],
+    };
+};
+
+
+const reportDashboardByDamageLevel = async () => {
+    const reportByDamageLevel1 = await prismaClient.reports.findMany({
+        where: {
+            is_delete: false,
+            damage_level_id: 1
+        },
+        select: {
+            damage_level: true,
+            lat: true,
+            long: true,
+            location: true,
+        }
+    })
+
+    const reportByDamageLevel2 = await prismaClient.reports.findMany({
+        where: {
+            is_delete: false,
+            damage_level_id: 2
+        },
+        select: {
+            damage_level: true,
+            lat: true,
+            long: true,
+            location: true,
+        }
+    })
+
+    const reportByDamageLevel3 = await prismaClient.reports.findMany({
+        where: {
+            is_delete: false,
+            damage_level_id: 3
+        },
+        select: {
+            damage_level: true,
+            lat: true,
+            long: true,
+            location: true,
+        }
+    })
+
+    return {
+        report_by_damage_level_1: reportByDamageLevel1,
+        report_by_damage_level_2: reportByDamageLevel2,
+        report_by_damage_level_3: reportByDamageLevel3,
+    }
+}
+
+const getLocation = async (lat, long) => {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${long}`;
+
+    const response = await axios.get(url);
+
+    return response.data;
+}
 
 
 export default {
@@ -509,5 +646,8 @@ export default {
     list,
     get,
     validateDistrict,
-    validatePupr
+    validatePupr,
+    reportDashboard,
+    reportDashboardByDamageLevel,
+    getLocation,
 }

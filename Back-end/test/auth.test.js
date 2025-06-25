@@ -3,6 +3,7 @@ import {web} from "../src/application/web.js"
 import {logger} from "../src/application/logging.js";
 import {createTestUser, removeTestUser} from "./utils/users-utils.js";
 import {prismaClient} from "../src/application/database.js";
+import passport from "passport";
 
 describe('POST /api/users/register', () => {
 
@@ -94,6 +95,53 @@ describe('POST /api/users/login', () => {
         expect(result.body.errors).toBeDefined()
     });
 })
+
+describe('GET /auth/google', () => {
+
+    beforeEach(async () => {
+        await createTestUser()
+    })
+
+    afterEach(async () => {
+        await removeTestUser();
+    })
+
+    it('should should login user with google auth', async () => {
+        const result = await supertest(web)
+            .get('/auth/google')
+
+        console.log(result.body)
+
+        expect(result.status).toBe(302)
+        expect(result.headers.location).toContain('accounts.google.com');
+    });
+
+    it('should handle google callback successfully', async () => {
+        // Mock the passport authenticate middleware
+        const mockUser = {
+            googleId: '12345',
+            email: 'test@example.com',
+            name: 'Test User'
+        };
+
+        passport.authenticate = jest.fn((strategy, options) => {
+            return (req, res, next) => {
+                req.user = mockUser;
+                next();
+            };
+        });
+
+        const result = await supertest(web)
+            .get('/auth/google/callback')
+            .query({ code: 'mock_auth_code' });
+
+        console.log(result.body)
+
+        expect(result.status).toBe(200);
+        expect(result.body).toHaveProperty('email');
+        expect(result.body).toHaveProperty('name');
+    });
+});
 
 describe('POST /api/users/logout', () => {
 
