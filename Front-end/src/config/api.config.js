@@ -25,6 +25,7 @@ export const API_CONFIG = {
             delete: (id) => `api/users/report/remove/${id}`,
             dashboard: 'api/report/dashboard',
             dashboardByDamageLevel: 'api/report/dashboard/by-level',
+            export: 'api/pupr/report/export',
         },
         comment: {
             create: (reportId) => `api/report/${reportId}/comments/create`,
@@ -41,6 +42,9 @@ export const API_CONFIG = {
             update: (id) => `api/pupr/users/update/${id}`,
             detail: (id) => `api/pupr/users/${id}`,
             remove: (id) => `api/pupr/users/remove/${id}`,
+        },
+        location: {
+            district: 'api/location-district',
         }
     }
 };

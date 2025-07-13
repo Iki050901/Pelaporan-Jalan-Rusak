@@ -10,7 +10,9 @@ const usersRouter = new express.Router();
 
 // Auth API
 usersRouter.get('/api/users/current', authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']),authController.get)
-usersRouter.put('/api/users/current', authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), authController.update)
+usersRouter.put('/api/users/current', uploadReport.fields([
+    { name: 'avatar', maxCount: 1 },
+]), authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), authController.update)
 usersRouter.delete('/api/users/logout', authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), authController.logout)
 usersRouter.put('/api/users/refresh', authMiddleware, rolesMiddleware(['USER', 'KECAMATAN', 'PUPR']), authController.refresh)
 

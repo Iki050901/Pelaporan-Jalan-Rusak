@@ -3,6 +3,7 @@ import {createUserValidation, getUsersValidation, updateUsersValidation} from ".
 import {prismaClient} from "../application/database.js";
 import {ResponseError} from "../error/response-error.js";
 import * as bcrypt from "bcrypt";
+import Joi from "joi";
 
 const create = async (request) => {
     const user = validate(createUserValidation, request);
@@ -43,6 +44,7 @@ const create = async (request) => {
             email: user.email,
             number_phone: user.number_phone,
             password: user.password,
+            district: user.district,
             role : {
                 connect: {
                     id: user.role_id
@@ -92,10 +94,10 @@ const update = async (request) => {
         name: user.name,
         email: user.email,
         number_phone: user.number_phone,
+        district: user.district,
     }
 
     if (user.password) {
-
         if (!user.confirm_password) {
             throw new ResponseError(400, 'Confirm Password harus di isi !')
         }
@@ -150,6 +152,15 @@ const remove = async (userId) => {
     if (userInDatabase && userInDatabase.is_delete === true) {
         throw new ResponseError(400, 'Tidak dapat menghapus akun karena akun ini telah dihapus sebelumnya !')
     }
+
+    prismaClient.reports.update({
+        where: {
+            user_id: userId
+        },
+        data: {
+            is_delete: true,
+        }
+    })
     
     return  prismaClient.users.update({
         where: {
@@ -177,7 +188,8 @@ const list = async (limit, page, latest) => {
             name: true,
             email: true,
             number_phone: true,
-            role: true
+            role: true,
+            district: true
         }
     })
 
@@ -211,6 +223,7 @@ const get = async (userId) => {
             email: true,
             number_phone: true,
             role: true,
+            district: true
         }
     })
 

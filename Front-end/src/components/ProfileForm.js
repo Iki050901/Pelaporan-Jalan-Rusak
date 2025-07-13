@@ -4,6 +4,10 @@ import {faEye, faEyeSlash} from "@fortawesome/free-solid-svg-icons";
 import {useEffect, useState} from "react";
 import {AuthService} from "@/services/auth.service";
 import {AlertInfo} from "@/components/AlertInfo";
+import AlertPopUp from "@/components/AlertPopUp";
+import {validateForm} from "@/validation/validation";
+import {createReportValidation} from "@/validation/report.validation";
+import Image from "next/image";
 
 export default function ProfileForm() {
 
@@ -13,6 +17,7 @@ export default function ProfileForm() {
         number_phone: "",
         password: "",
         confirm_password: "",
+        avatar: null
     });
 
     const [profile, setProfile] = useState({});
@@ -23,6 +28,9 @@ export default function ProfileForm() {
 
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+    const [success, setSuccess] = useState("");
+
+    const [avatarPreview, setAvatarPreview] = useState("");
     
     const fetchProfile = async () => {
         try {
@@ -52,13 +60,24 @@ export default function ProfileForm() {
                 number_phone: profile.number_phone || "",
                 password: "",
                 confirm_password: "",
+                avatar: profile.avatar || "",
             })
         }
     }, [profile]);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
+        const { name, value, files } = e.target;
+        if (name === "avatar") {
+            const avatar = files[0];
+
+            if (avatar) {
+                const preview = URL.createObjectURL(avatar);
+                setForm((prev) => ({ ...prev, avatar: avatar }));
+                setAvatarPreview(preview)
+            }
+        } else {
+            setForm((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -67,8 +86,14 @@ export default function ProfileForm() {
         setSubmitError(null);
 
         try {
-            await AuthService.updateUser(form);
+            const formData = new FormData();
+            formData.append("profile_data", JSON.stringify({
+                ...form
+            }))
+
+            await AuthService.updateUser(formData);
             await fetchProfile()
+            setSuccess("Profile berhasil di update")
         } catch (error) {
             console.error("Submit error: ", error)
             setSubmitError(error)
@@ -94,6 +119,14 @@ export default function ProfileForm() {
     return (
         <form onSubmit={handleSubmit}>
             <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 relative">
+                {success && (
+                    <AlertPopUp
+                        message={success}
+                        type="success"
+                        duration={5000}
+                        onClose={() => setSuccess("")}
+                    />
+                )}
                 <div className="sm:col-span-4">
                     <label htmlFor="name" className="block text-sm/6 font-medium text-gray-900">Nama Pengguna</label>
                     <div className="mt-2">
@@ -103,6 +136,33 @@ export default function ProfileForm() {
                                    onChange={handleChange}
                                    className="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6"/>
                         </div>
+                    </div>
+                </div>
+                <div className="sm:col-span-4 mt-10">
+                    <label htmlFor="photo" className="block text-sm font-medium text-gray-900">Photo</label>
+                    <div className="mt-2 flex items-center gap-x-3">
+                        <Image
+                            className="size-12 rounded-full border"
+                            src={avatarPreview || profile.avatar || "/images/default-avatar.png"}
+                            width={48}
+                            height={48}
+                            alt="Preview"
+                            unoptimized
+                        />
+                        <label
+                            htmlFor="avatar"
+                            className="rounded-md cursor-pointer bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
+                        >
+                            Change
+                            <input
+                                id="avatar"
+                                name="avatar"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleChange}
+                                className="sr-only"
+                            />
+                        </label>
                     </div>
                 </div>
                 <div className="sm:col-span-4 mt-10">

@@ -13,8 +13,9 @@ export default function NavAdmin({ onMenuClick, active}) {
 
     const menuItems = [
         { label: "Dashboard", key: "dashboard", roles: ["USER", "KECAMATAN", "PUPR"] },
-        { label: "Laporan", key: "report", roles: ["KECAMATAN", "PUPR", "USER"] },
-        { label: "Riwayat Laporan", key: "history", roles: ["USER", "KECAMATAN", "PUPR"] },
+        { label: "Buat Laporan", key: "report/create", roles: ["USER"] },
+        { label: role === "USER" ? "Riwayat Laporan" : "Validasi Laporan", key: "report", roles: ["USER", "KECAMATAN", "PUPR"] },
+        { label: "Riwayat Validasi", key: "history", roles: ["KECAMATAN", "PUPR"] },
         { label: "Manajemen Users", key: "users", roles: ["PUPR"] },
     ];
 
@@ -64,8 +65,15 @@ export default function NavAdmin({ onMenuClick, active}) {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center">
-                        <div className="shrink-0">
-                            <h1 className="text-white">LAPOR!</h1>
+                        <div className="shrink-0 bg-white rounded-md p-2">
+                            <Image
+                                src="/images/logo.png"
+                                unoptimized
+                                width={120}
+                                height={80}
+                                className="w-[120px] h-[40px] object-cover"
+                                alt="Logo PUPR"
+                            />
                         </div>
                         <div className="hidden md:block">
                             <div className="ml-10 flex items-baseline space-x-4">

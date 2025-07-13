@@ -10,6 +10,9 @@ import {ResponseError} from "../error/response-error.js";
 import * as bcrypt from "bcrypt";
 import moment from "moment-timezone";
 import {generateRefreshToken, generateToken} from "../utils/generateToken.js";
+import path from "node:path";
+import fs from "node:fs";
+import {logger} from "../application/logging.js";
 
 
 const register = async (request) => {
@@ -31,10 +34,10 @@ const register = async (request) => {
 
     if (existingUser) {
         if (existingUser.number_phone === user.number_phone) {
-            throw new ResponseError('No. Handphone telah terdaftar !')
+            throw new ResponseError(400, 'No. Handphone telah terdaftar !')
         }
         if (existingUser.email === user.email) {
-            throw new ResponseError('Email telah terdaftar !')
+            throw new ResponseError(400, 'Email telah terdaftar !')
         }
     }
 
@@ -237,6 +240,7 @@ const update = async (request) => {
             email: true,
             number_phone: true,
             role_id: true,
+            avatar: true,
         }
     })
 
@@ -245,7 +249,10 @@ const update = async (request) => {
     }
 
     if (userInDatabase) {
-        if (userInDatabase.number_phone === user.number_phone) {
+        if (userInDatabase.number_phone === user.number_phone && user.id !== userInDatabase.id) {
+            throw new ResponseError( 400,'No. Handphone telah terdaftar !')
+        }
+        if (userInDatabase.email === user.number_phone && user.id !== userInDatabase.id) {
             throw new ResponseError( 400,'No. Handphone telah terdaftar !')
         }
     }
@@ -254,10 +261,10 @@ const update = async (request) => {
         name: user.name,
         email: user.email,
         number_phone: user.number_phone,
+        avatar: user.avatar
     }
 
     if (user.password) {
-
         if (!user.confirm_password) {
             throw new ResponseError(400, 'Confirm Password harus di isi !')
         }
@@ -270,6 +277,25 @@ const update = async (request) => {
         }
 
         data.password = hashPass;
+    }
+
+    if (user.avatar) {
+        const oldAvatarPath = userInDatabase.avatar?.replace(`${process.env.DOMAIN}/`, "");
+        const newUploadAvatarPath = process.env.FILE_UPLOAD_PROFILE.replace(process.env.DELETE_PATH_UPLOAD, "")
+        const newAvatarPathURL = user?.profile?.filename
+            ? `${process.env.DOMAIN}/${newUploadAvatarPath}/${user?.profile?.filename}`
+            : undefined;
+
+        if (newAvatarPathURL && oldAvatarPath && newAvatarPathURL !== oldAvatarPath) {
+            const fullPath =  path.join(process.env.DELETE_PATH_UPLOAD, oldAvatarPath.replace(/\\/g, '/'))
+            fs.unlink(fullPath, (err) => {
+                if (err) {
+                    logger.error(`Failed to delete old image: ${err.message}`)
+                } else {
+                    logger.info(`Deleted old image: ${oldAvatarPath}`)
+                }
+            });
+        }
     }
 
     return prismaClient.users.update({
@@ -590,6 +616,8 @@ const get = async (request) => {
             email: true,
             number_phone: true,
             role: true,
+            district: true,
+            avatar: true,
             refresh_token: {
               select: {
                   refresh_token: true,
@@ -610,7 +638,6 @@ const get = async (request) => {
     }
 
     getUser.token = token;
-    getUser.avatar = 'https://avatar.iran.liara.run/public/42';
 
     return getUser;
 }

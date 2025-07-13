@@ -10,6 +10,11 @@ import {API_CONFIG, getApiUrl} from "@/config/api.config";
 import {AuthService} from "@/services/auth.service";
 import {withAuth} from "@/components/withAuth";
 import {useUser} from "@/context/UserContext";
+import dynamic from "next/dynamic";
+
+const MyMap = dynamic(() => import("@/components/Map"), {
+    ssr: !!false,
+});
 
 function DashboardPage() {
 
@@ -45,6 +50,9 @@ function DashboardPage() {
         <div className="min-h-full">
             <NavAdmin onMenuClick={handleMenuClick} active={activeSection}/>
             <HeaderAdmin title={activeSection}/>
+            <div className="max-w-7xl mx-auto p-4 space-y-8 ">
+                <MyMap />
+            </div>
             <Dashboard />
         </div>
     )

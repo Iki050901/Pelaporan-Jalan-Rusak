@@ -97,52 +97,59 @@ export default function Map() {
     ];
 
     return (
-        <div className="flex flex-col lg:flex-col gap-6 p-6">
-            {/* MAP */}
-            <div className="w-full lg:w-full bg-white rounded-lg shadow p-8">
-                <MapContainer
-                    center={garutCoords}
-                    zoom={12}
-                    scrollWheelZoom={false}
-                    className="h-100 w-full rounded-md z-0"
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {stats.map(({ label, marker, data }) =>
-                        data.map((item, idx) => (
-                            <Marker
-                                key={`${label}-${idx}`}
-                                position={[parseFloat(item.lat), parseFloat(item.long)]}
-                                icon={marker}
-                            >
-                                <Popup>
-                                    <p className="text-sm font-semibold">Tingkat Kerusakan: {label}</p>
-                                    <p className="text-xs">{item.location}</p>
-                                </Popup>
-                            </Marker>
-                        ))
-                    )}
-                </MapContainer>
-            </div>
+        <div className="flex flex-col gap-6 p-2 sm:p-4 lg:p-6">
+            {/* Judul */}
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-center text-blue-900 mb-4">
+                Peta Sebaran Laporan<br />Jalan Rusak Masyarakat
+            </h1>
 
-            {/* RIGHT PANEL */}
-            <div className="w-full lg:w-full bg-white rounded-lg shadow p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-semibold text-gray-700 ">Deskripsi</h2>
+            {/* Layout Map + Deskripsi Responsive */}
+            <div className="flex flex-col lg:flex-row gap-6">
+                {/* MAP */}
+                <div className="w-full lg:w-2/3 bg-white rounded-lg shadow p-4 sm:p-6">
+                    <MapContainer
+                        center={garutCoords}
+                        zoom={12}
+                        scrollWheelZoom={false}
+                        className="h-[400px] sm:h-[500px] w-full rounded-md z-0"
+                    >
+                        <TileLayer
+                            attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        {stats.map(({ label, marker, data }) =>
+                            data.map((item, idx) => (
+                                <Marker
+                                    key={`${label}-${idx}`}
+                                    position={[parseFloat(item.lat), parseFloat(item.long)]}
+                                    icon={marker}
+                                >
+                                    <Popup>
+                                        <p className="text-sm font-semibold">Tingkat Kerusakan: {label}</p>
+                                        <p className="text-xs">{item.location}</p>
+                                    </Popup>
+                                </Marker>
+                            ))
+                        )}
+                    </MapContainer>
                 </div>
 
-                {stats.map(({ label, color, data }, idx) => (
-                    <div key={idx} className="flex items-center justify-between py-1">
-                        <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${color}`}></div>
-                            <span className="text-sm text-gray-700">{label}</span>
-                        </div>
-                        <span className="text-blue-900 font-semibold">{data.length}</span>
+                {/* DESKRIPSI */}
+                <div className="w-full lg:w-1/3 h-50 bg-white rounded-lg shadow p-4 sm:p-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold text-gray-700">Deskripsi</h2>
                     </div>
-                ))}
 
+                    {stats.map(({ label, color, data }, idx) => (
+                        <div key={idx} className="flex items-center justify-between py-2">
+                            <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full ${color}`}></div>
+                                <span className="text-sm text-gray-700">{label}</span>
+                            </div>
+                            <span className="text-blue-900 font-semibold">{data.length}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

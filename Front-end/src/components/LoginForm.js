@@ -14,12 +14,14 @@ import {faGoogle} from "@fortawesome/free-brands-svg-icons";
 import {API_CONFIG, getApiUrl} from "@/config/api.config";
 import {AuthService} from "@/services/auth.service";
 import AlertPopUp from "@/components/AlertPopUp";
+import {errorFormater} from "@/utils/error-utils";
 
 export default function LoginForm() {
 
     const router = useRouter();
 
     const [showPassword, setShowPassword] = useState(false);
+    const [success, setSuccess] = useState("");
     const [error, setError] = useState("");
     const [form, setForm] = useState({
         email: "",
@@ -31,10 +33,17 @@ export default function LoginForm() {
         try {
             const response = await axios.post(getApiUrl(API_CONFIG.endpoints.auth.login), form);
             AuthService.setToken(response.data.data.token.token);
-            router.push('/dashboard');
+
+            setSuccess("Login Berhasil!");
+
+            setTimeout(() => {
+                router.push("/dashboard");
+            }, 2000);
         } catch (e) {
             console.error('Login error: ', e)
-            setError(e.response.data.errors)
+            const errorFormated = errorFormater(e.response?.data?.errors)
+            console.error(errorFormated)
+            setError(errorFormated)
         }
     }
 
@@ -53,7 +62,7 @@ export default function LoginForm() {
     }
 
     return (
-        <div className="min-h-screen bg-cover bg-center flex items-center justify-center p-4">
+        <div >
             {error && (
                 <AlertPopUp
                     message={error}
@@ -62,9 +71,17 @@ export default function LoginForm() {
                     onClose={() => setError("")}
                 />
             )}
-            <div className="bg-indigo-900 text-white rounded-3xl p-8 w-full max-w-md shadow-lg relative">
+            {success && (
+                <AlertPopUp
+                    message={success}
+                    type="success"
+                    duration={2000}
+                    onClose={() => setSuccess("")}
+                />
+            )}
+            <div className="bg-indigo-20 text-white rounded-3xl p-8 w-full max-w-md shadow-lg relative">
                 <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
-                <form>
+                <form onSubmit={handleLoginClick}>
                     <div className="mb-4">
                         <label className="block mb-1">Email</label>
                         <input
@@ -73,6 +90,7 @@ export default function LoginForm() {
                             onChange={handleChange}
                             placeholder="Masukkan email"
                             name="email"
+                            required
                             className="w-full px-4 py-2 rounded-md text-white focus:outline-none"
                         />
                     </div>
@@ -83,6 +101,7 @@ export default function LoginForm() {
                             placeholder="Masukkan Password"
                             value={form.password}
                             onChange={handleChange}
+                            required
                             name="password"
                             className="w-full px-4 py-2 rounded-md text-white pr-10 focus:outline-none"
                         />
@@ -97,9 +116,7 @@ export default function LoginForm() {
 
                     <button
                         type="submit"
-                        onClick={handleLoginClick}
-                        className="w-full bg-yellow-400 hover:bg-yellow-500 py-2 rounded-md font-semibold"
-                    >
+                        className="w-full bg-yellow-400 hover:bg-yellow-500 py-2 rounded-md font-semibold">
                         Masuk
                     </button>
                 </form>

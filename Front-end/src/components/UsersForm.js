@@ -1,10 +1,11 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEye, faEyeSlash} from "@fortawesome/free-solid-svg-icons";
 import {createUsers} from "@/services/users.service";
 import {useRouter} from "next/navigation";
+import {getLocationDistrict} from "@/services/report.service";
 
 export default function UsersForm() {
 
@@ -15,12 +16,29 @@ export default function UsersForm() {
         password: "",
         confirm_password: "",
         role_id: 3,
+        district: ""
     });
+
+    const [district, setDistrict] = useState([{}]);
 
     const router = useRouter();
 
     const [submitError, setSubmitError] = useState(null);
+    
+    const fetchDistrict = async () => {
+        try {
+            const response = await getLocationDistrict()
+            console.log(response)
+            setDistrict(response.result);
+        } catch (e) {
+            console.error('Fetch reports error: ', e)
+        }
+    }
 
+    useEffect(() => {
+        fetchDistrict()
+    }, [])
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -150,6 +168,27 @@ export default function UsersForm() {
                             </svg>
                         </div>
                     </div>
+                </div>
+                <div className="col-span-full mt-10">
+                    {form.role_id === 2 && (
+                        <div className="mt-4">
+                            <label htmlFor="district_id" className="block text-sm font-medium text-gray-700">Pilih Kecamatan</label>
+                            <select
+                                id="district"
+                                name="district"
+                                value={form.district || ""}
+                                onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 text-base shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            >
+                                <option value="">-- Pilih Kecamatan --</option>
+                                {district.map((district) => (
+                                    <option key={district.id} value={district.text}>
+                                        {district.text}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
                 <div className="mt-6 flex items-center justify-end gap-x-6">
                     <button type="submit"

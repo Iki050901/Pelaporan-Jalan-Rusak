@@ -24,10 +24,13 @@ export const validationStatus = [
         status: 'Di tinjau oleh PUPR',
     },
     {
-        status: 'Laporan diterima oleh PUPR ',
+        status: 'Laporan diterima oleh PUPR',
     },
     {
-        status: 'Laporan ditolak oleh PUPR ',
+        status: 'Laporan ditolak oleh PUPR',
+    },
+    {
+        status: 'Selesai',
     },
 ]
 

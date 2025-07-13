@@ -30,7 +30,8 @@ const createReportValidation = Joi.object({
     }, 'Longitude validation'),
     damage_level_id: Joi.number().required(),
     images: Joi.array().items(fileSchema).required().max(5).required(),
-    video: Joi.object().required()
+    video: Joi.object().optional(),
+    district: Joi.string()
 })
 
 const updateReportValidation = Joi.object({
@@ -55,7 +56,8 @@ const updateReportValidation = Joi.object({
     damage_level_id: Joi.number(),
     image_to_keep: Joi.array().items(imageKeepSchema),
     images: Joi.array().items(fileSchema).max(5),
-    video: Joi.object()
+    video: Joi.object().optional(),
+    district: Joi.string()
 })
 
 const getReportValidation = Joi.string().max(255)

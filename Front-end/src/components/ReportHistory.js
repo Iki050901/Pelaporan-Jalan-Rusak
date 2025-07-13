@@ -6,7 +6,7 @@ import {getStatusClass} from "@/utils/status.utils";
 import Image from "next/image";
 import {useUser} from "@/context/UserContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faEye} from "@fortawesome/free-solid-svg-icons";
+import {faEye, faFilter, faSort} from "@fortawesome/free-solid-svg-icons";
 import {handlePageChange, renderPaginationNumbers} from "@/utils/pagination.utils";
 
 export default function ReportHistory() {
@@ -24,11 +24,15 @@ export default function ReportHistory() {
     const router = useRouter();
     const [error, setError] = useState(null);
 
+    const [validation, setValidation] = useState("");
+    const [latest, setLatest] = useState("latest");
+    const [damageLevel, setDamageLevel] = useState("");
+
     useEffect(() => {
         if (role) {
             fetchReports();
         }
-    }, [role, page])
+    }, [role, page, validation, damageLevel, latest])
 
     const fetchReports = async () => {
         try {
@@ -38,11 +42,11 @@ export default function ReportHistory() {
             let response;
 
             if (role === 'PUPR') {
-                response = await listReport(true, page, 10, '5,6');
+                response = await listReport(true, page, 10, '5,6,7', "", damageLevel, latest);
             } else if (role === 'KECAMATAN') {
-                response = await listReport(true, page, 10, '2,3');
+                response = await listReport(true, page, 10, '2,3', "", damageLevel, latest);
             } else if (role === 'USER') {
-                response = await listReport(true, page, 10);
+                response = await listReport(true, page, 10, validation, "", damageLevel, latest);
             } else {
                 console.warn("Unknown role:", role);
             }
@@ -84,6 +88,56 @@ export default function ReportHistory() {
     if (!loading && reports.length === 0) {
         return (
             <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700 py-4">
+                    {/* Sort by Date */}
+                    <div className="font-semibold text-gray-400">
+                        <span><FontAwesomeIcon icon={faSort} className="mr-2"/>Urutkan berdasarkan : </span>
+                    </div>
+                    <div className="relative inline-block">
+                        <select
+                            name="latest"
+                            value={latest}
+                            onChange={(e) => setLatest(e.target.value)}
+                            className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="latest">Terbaru</option>
+                            <option value="oldest">Terlama</option>
+                        </select>
+                    </div>
+
+                    {/* Filter by Validation */}
+                    <div className="font-semibold text-gray-400">
+                        <span><FontAwesomeIcon icon={faFilter} className="mr-2"/>Filter berdasarkan : </span>
+                    </div>
+                    <div className="relative inline-block">
+                        <select
+                            name="validation"
+                            value={validation}
+                            onChange={(e) => setValidation(e.target.value)}
+                            className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Semua Validasi</option>
+                            <option value="1">Belum di Validasi</option>
+                            <option value="3">Validasi oleh Kecamatan</option>
+                            <option value="5">Validasi oleh PUPR</option>
+                            <option value="7">Selesai</option>
+                        </select>
+                    </div>
+
+                    {/* Filter by Damage Level */}
+                    <div className="relative inline-block">
+                        <select
+                            name="damage_level"
+                            value={damageLevel}
+                            onChange={(e) => setDamageLevel(e.target.value)}
+                            className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">Tingkat Kerusakan</option>
+                            <option value="1">Ringan</option>
+                            <option value="2">Sedang</option>
+                            <option value="3">Berat</option>
+                        </select>
+                    </div>
+                </div>
                 <AlertInfo
                     title="404"
                     message="Data tidak ditemukan"
@@ -100,6 +154,58 @@ export default function ReportHistory() {
         <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
             <div className="mt-6 flow-root">
                 <div className="overflow-x-auto">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700 py-4">
+                        {/* Sort by Date */}
+                        <div className="font-semibold text-gray-400">
+                            <span><FontAwesomeIcon icon={faSort} className="mr-2"/>Urutkan berdasarkan : </span>
+                        </div>
+                        <div className="relative inline-block">
+                            <select
+                                name="latest"
+                                value={latest}
+                                onChange={(e) => setLatest(e.target.value)}
+                                className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="latest">Terbaru</option>
+                                <option value="oldest">Terlama</option>
+                            </select>
+                        </div>
+
+                        {/* Filter by Validation */}
+                        <div className="font-semibold text-gray-400">
+                            <span><FontAwesomeIcon icon={faFilter} className="mr-2"/>Filter berdasarkan : </span>
+                        </div>
+                        { role === 'USER' && (
+                            <div className="relative inline-block">
+                                <select
+                                    name="validation"
+                                    value={validation}
+                                    onChange={(e) => setValidation(e.target.value)}
+                                    className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Semua Validasi</option>
+                                    <option value="1">Belum di Validasi</option>
+                                    <option value="3">Validasi oleh Kecamatan</option>
+                                    <option value="5">Validasi oleh PUPR</option>
+                                    <option value="7">Selesai</option>
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Filter by Damage Level */}
+                        <div className="relative inline-block">
+                            <select
+                                name="damage_level"
+                                value={damageLevel}
+                                onChange={(e) => setDamageLevel(e.target.value)}
+                                className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Tingkat Kerusakan</option>
+                                <option value="1">Ringan</option>
+                                <option value="2">Sedang</option>
+                                <option value="3">Berat</option>
+                            </select>
+                        </div>
+                    </div>
                     <table className="min-w-full divide-y divide-gray-300">
                         <thead className="bg-gray-50">
                         <tr>
@@ -134,7 +240,7 @@ export default function ReportHistory() {
                                 </td>
                                 <td>
                                     <button
-                                        onClick={() => handleDetailClick(id)}
+                                        onClick={() => handleDetailClick(report.id)}
                                         className="mt-4 me-2 sm:mt-0 inline-flex items-center rounded-md bg-blue-800 p-2 text-sm text-white shadow-sm hover:bg-blue-900"
                                     >
                                         <FontAwesomeIcon icon={faEye} size="sm" />

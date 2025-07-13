@@ -13,12 +13,14 @@ model Users {
   email            String        @unique @db.VarChar(255)
   number_phone     String?       @unique @db.Char(14)
   password         String?       @db.VarChar(255)
+  avatar           String?       @db.VarChar(255)
   refresh_token_id String?       @db.VarChar(255)
   google_id        String?       @unique
   role_id          Int
   is_delete        Boolean       @default(false) @db.TinyInt
   refresh_token    RefreshToken? @relation(fields: [refresh_token_id], references: [id])
   role             Roles         @relation(fields: [role_id], references: [id])
+  district         String?       @db.VarChar(255)
   Token            Token[]
   Reports          Reports[]
   Comments         Comments[]
@@ -73,12 +75,13 @@ model Reports {
   location             String           @db.TinyText
   is_district_validate Boolean          @db.TinyInt
   is_pupr_validate     Boolean          @db.TinyInt
-  video_url            String           @db.VarChar(255)
+  video_url            String?          @db.VarChar(255)
   user_id              String           @db.VarChar(255)
   created_at           DateTime         @default(now()) @db.Timestamp(0)
   updated_at           DateTime         @default(now()) @db.Timestamp(0)
   is_delete            Boolean          @default(false) @db.TinyInt
   notes                String?          @db.TinyText
+  district             String?          @db.VarChar(255)
   validation_stat_id   Int
   damage_level_id      Int
   user                 Users            @relation(fields: [user_id], references: [id])

@@ -43,10 +43,11 @@ export const updateUsers = async (userId, formData) => {
 export const deleteUser = async (userId) => {
     try {
         const response = await axios.delete(
-            getApiUrl(API_CONFIG.endpoints.users.delete(userId))
+            getApiUrl(API_CONFIG.endpoints.users.remove(userId))
         )
         return response.data.data;
     } catch (error) {
+        console.log("delete user", error);
         throw error.response?.data.errors || { message: "Failed to delete user" };
     }
 }

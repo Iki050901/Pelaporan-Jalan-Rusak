@@ -22,11 +22,22 @@ export const updateReport = async (formData, reportId) => {
         );
         return response.data.data;
     } catch (error) {
-        throw error.response?.data.errors || { message: 'Failed to create report.' };
+        throw error.response?.data.errors || { message: 'Failed to update report.' };
     }
 }
 
-export const listReport = async (isTable, page, limit, status) => {
+export const deleteReport = async (reportId) => {
+    try {
+        const response = await axios.delete(
+            getApiUrl(API_CONFIG.endpoints.report.delete(reportId))
+        );
+        return response.data.data;
+    } catch (error) {
+        throw error.response?.data.errors || { message: 'Failed to delete report.' };
+    }
+}
+
+export const listReport = async (isTable, page, limit, status, district, level_damage, sort) => {
 
     try {
         const response = await axios.get(getApiUrl(API_CONFIG.endpoints.report.list), {
@@ -34,7 +45,10 @@ export const listReport = async (isTable, page, limit, status) => {
                     page,
                     limit,
                     isTable,
-                    status
+                    status,
+                    district,
+                    level_damage,
+                    sort
                 }
             }
         );
@@ -82,6 +96,15 @@ export const validatePupr = async (reportId) => {
     }
 }
 
+export const validatePuprDone = async (reportId) => {
+    try {
+        const response = await axios.put(getApiUrl(API_CONFIG.endpoints.validation.pupr(reportId, 7)))
+        return response.data.data;
+    } catch (error) {
+        throw error.response?.data.errors || { message: 'Failed to get report.' };
+    }
+}
+
 export const rejectPupr = async (reportId, rejectReason) => {
     try {
         const response = await axios.put(getApiUrl(API_CONFIG.endpoints.validation.pupr(reportId, 6)),  {
@@ -106,6 +129,33 @@ export const getDashboardReport = async () => {
 export const getDashboardReportByDamageLevel = async () => {
     try {
         const response = await axios.get(getApiUrl(API_CONFIG.endpoints.report.dashboardByDamageLevel))
+
+        return response.data.data;
+    } catch (error) {
+        throw error.response?.data.errors || { message: 'Failed to get report.' };
+    }
+}
+
+export const exportReport = async (year,month) => {
+    try {
+        const response = await axios.get(getApiUrl(API_CONFIG.endpoints.report.export), {
+            responseType: 'blob',
+            withCredentials: true,
+            params: {
+                year,
+                month,
+            }
+        })
+
+        return response;
+    } catch (error) {
+        throw error.response?.data.errors || { message: error };
+    }
+}
+
+export const getLocationDistrict = async () => {
+    try {
+        const response = await axios.get(getApiUrl(API_CONFIG.endpoints.location.district))
 
         return response.data.data;
     } catch (error) {

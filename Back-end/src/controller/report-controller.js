@@ -13,13 +13,13 @@ const create = async (req, res, next) => {
             mimetype: file.mimetype,
             size: file.size
         })) : [];
-        const video = req.files['video'] ? req.files['video'][0] : null;
+        const video = req.files['video'] ? req.files['video'][0] : undefined;
         request.video = video ? {
             filename: video.filename,
             path: video.path,
             mimetype: video.mimetype,
             size: video.size
-        } : null;
+        } : undefined;
         const result = await reportService.create(request);
         res.status(200).json({
             data: result,
@@ -41,13 +41,13 @@ const update = async (req, res, next) => {
             mimetype: file.mimetype,
             size: file.size
         })) : [];
-        const video = req.files['video'] ? req.files['video'][0] : null;
+        const video = req.files['video'] ? req.files['video'][0] : undefined;
         request.video = video ? {
             filename: video.filename,
             path: video.path,
             mimetype: video.mimetype,
             size: video.size
-        } : {};
+        } : undefined;
         request.id = reportId;
         const result = await reportService.update(request);
         res.status(200).json({
@@ -73,12 +73,15 @@ const remove = async (req, res, next) => {
 const list = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const roleId = req.user.role_id;
+        const roleId = req.user.role.id;
+        const isTable = req.query.isTable
+        const district = req.query.district
+        const sort = req.query.sort
         const limit = parseInt(req.query.limit);
         const page = parseInt(req.query.page);
         const status = req.query.status;
         const level_damage = parseInt(req.query.level_damage);
-        const result = await reportService.list(limit, page, status, level_damage, userId, roleId);
+        const result = await reportService.list(limit, page, status, level_damage, userId, roleId, isTable, district, sort);
         res.status(200).json({
             data: result,
         })
@@ -164,6 +167,27 @@ const getLocation = async (req, res, next) => {
     }
 }
 
+const getLocationDistrict = async (req, res, next) => {
+    try {
+        const result = await reportService.getLocationDistrict();
+        res.status(200).json({
+            data: result,
+        })
+    } catch (e) {
+        next(e);
+    }
+}
+
+const getReport = async (req, res, next) => {
+    try {
+        const year = parseInt(req.query.year);
+        const month = parseInt(req.query.month);
+        await reportService.getReport(month, year, res);
+    } catch (e) {
+        next(e);
+    }
+}
+
 export default {
     create,
     update,
@@ -175,4 +199,6 @@ export default {
     reportDashboard,
     reportDashboardByDamageLevel,
     getLocation,
+    getLocationDistrict,
+    getReport
 }

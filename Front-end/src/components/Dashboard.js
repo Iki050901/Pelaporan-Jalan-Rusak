@@ -1,5 +1,10 @@
 "use client";
 
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {
+    faFilter, faSort
+} from "@fortawesome/free-solid-svg-icons";
+
 import ReportCard from "@/components/ReportCard";
 import {useRouter} from "next/navigation";
 import {useEffect, useState} from "react";
@@ -21,16 +26,19 @@ function Dashboard() {
     const [pageSize, setPageSize] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [error, setError] = useState(null);
+    const [validation, setValidation] = useState("");
+    const [latest, setLatest] = useState("latest");
+    const [damageLevel, setDamageLevel] = useState("");
 
     useEffect(() => {
         fetchReports()
-    }, [page]);
+    }, [page, validation, damageLevel, latest]);
 
     const fetchReports = async () => {
         try {
             setError(null);
             setLoading(true);
-            const response = await listReport(true, page, 10);
+            const response = await listReport(false, page, 10, validation, "", damageLevel, latest);
 
             setReports(response.reports);
             setTotalPage(response.total_pages)
@@ -45,6 +53,12 @@ function Dashboard() {
         }
     }
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+
+    };
+
     if (error) {
         return (
             <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
@@ -57,16 +71,10 @@ function Dashboard() {
         );
     }
 
-    if (!loading && reports.length === 0) {
-        return (
-            <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
-                <AlertInfo
-                    title="404"
-                    message="Data tidak ditemukan"
-                />
-            </div>
-        );
-    }
+    // if (!loading && reports.length === 0) {
+    //     return (
+    //     );
+    // }
 
     if (loading) {
         return <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-800 mx-auto"></div>;
@@ -75,6 +83,66 @@ function Dashboard() {
     return (
         <main>
             <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-center text-blue-900 mb-2 p-4 border-b border-gray-300">Daftar Laporan Jalan Rusak</h1>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-700 py-4">
+                    {/* Sort by Date */}
+                    <div className="font-semibold text-gray-400">
+                        <span><FontAwesomeIcon icon={faSort} className="mr-2"/>Urutkan berdasarkan : </span>
+                    </div>
+                    <div className="relative inline-block">
+                        <select
+                            name="latest"
+                            value={latest}
+                            onChange={(e) => setLatest(e.target.value)}
+                            className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="latest">Terbaru</option>
+                            <option value="oldest">Terlama</option>
+                        </select>
+                    </div>
+
+                    {/* Filter by Validation */}
+                    <div className="font-semibold text-gray-400">
+                        <span><FontAwesomeIcon icon={faFilter} className="mr-2"/>Filter berdasarkan : </span>
+                    </div>
+                    <div className="relative inline-block">
+                        <select
+                            name="validation"
+                            value={validation}
+                            onChange={(e) => setValidation(e.target.value)}
+                            className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Semua Validasi</option>
+                            <option value="1">Belum di Validasi</option>
+                            <option value="3">Validasi oleh Kecamatan</option>
+                            <option value="5">Validasi oleh PUPR</option>
+                            <option value="7">Selesai</option>
+                        </select>
+                    </div>
+
+                    {/* Filter by Damage Level */}
+                    <div className="relative inline-block">
+                        <select
+                            name="damage_level"
+                            value={damageLevel}
+                            onChange={(e) => setDamageLevel(e.target.value)}
+                            className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">Tingkat Kerusakan</option>
+                            <option value="1">Ringan</option>
+                            <option value="2">Sedang</option>
+                            <option value="3">Berat</option>
+                        </select>
+                    </div>
+                </div>
+                {!loading && reports.length === 0 && (
+                    <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
+                        <AlertInfo
+                            title="404"
+                            message="Data tidak ditemukan"
+                        />
+                    </div>
+                    )
+                }
                 {reports.map((report) => (
                     <ReportCard
                         key={report.id}

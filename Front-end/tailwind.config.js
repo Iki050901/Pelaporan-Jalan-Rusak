@@ -6,6 +6,10 @@ module.exports = {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                sans: ['Rubik', 'ui-sans-serif', 'system-ui'],
+                poppins: ['Poppins', 'sans-serif'],
+            },
             animation: {
                 'fadeIn': "fadeIn 0.3s ease-out forwards",
             },
@@ -25,5 +29,8 @@ module.exports = {
             },
         },
     },
-    plugins: [require("tailwindcss-animate")],
+    plugins: [
+        require("tailwindcss-animate"),
+        require('@tailwindcss/aspect-ratio'),
+    ],
 };

@@ -14,7 +14,7 @@ export default function ReportFormPage() {
     const router = useRouter();
     const sectionParam = searchParams.get("path");
 
-    const [activeSection, setActiveSection] = useState(sectionParam || "report");
+    const [activeSection, setActiveSection] = useState(sectionParam || "report/create");
 
     const handleMenuClick = (sectionName) => {
         setActiveSection(sectionName);

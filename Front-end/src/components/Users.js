@@ -1,10 +1,12 @@
 import {useRouter} from "next/navigation";
 import {useEffect, useState} from "react";
-import {listUsers} from "@/services/users.service";
+import {deleteUser, listUsers} from "@/services/users.service";
 import {AlertInfo} from "@/components/AlertInfo";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faEdit, faEye} from "@fortawesome/free-solid-svg-icons";
+import {faEdit, faEye, faTrash} from "@fortawesome/free-solid-svg-icons";
 import {handlePageChange, renderPaginationNumbers} from "@/utils/pagination.utils";
+import {deleteReport} from "@/services/report.service";
+import AlertPopUp from "@/components/AlertPopUp";
 
 export default function Users() {
 
@@ -16,6 +18,9 @@ export default function Users() {
     const [pageSize, setPageSize] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     const [error, setError] = useState(null);
+
+    const [submitSuccess, setSubmitSuccess] = useState("");
+    const [success, setSuccess] = useState("");
 
     const router = useRouter();
 
@@ -40,6 +45,17 @@ export default function Users() {
             console.error('Fetch reports error: ', e)
         } finally {
             setLoading(false);
+        }
+    }
+
+    const handleDeleteClick = async (userId) => {
+        try {
+            await deleteUser(userId);
+
+            setSuccess("Success to delete user");
+            await fetchUsers();
+        } catch (error) {
+            console.error(error);
         }
     }
 
@@ -91,6 +107,14 @@ export default function Users() {
     return (
         <>
             <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
+                {success && (
+                    <AlertPopUp
+                        message={success}
+                        type="success"
+                        duration={2000}
+                        onClose={() => setSuccess("")}
+                    />
+                )}
                 <div className="sm:flex sm:items-center justify-between">
                     <button onClick={handleCreateClick} className="mt-4 sm:mt-0 inline-flex items-center rounded-md bg-blue-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-900">
                         + Tambah Akun Pengguna
@@ -128,6 +152,12 @@ export default function Users() {
                                             className="mt-4 me-2 sm:mt-0 inline-flex items-center rounded-md bg-yellow-400 p-2 text-sm text-white shadow-sm hover:bg-yellow-800"
                                         >
                                             <FontAwesomeIcon icon={faEdit} size="sm" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteClick(user.id)}
+                                            className="mt-4 me-2 sm:mt-0 inline-flex items-center rounded-md bg-red-500 p-2 text-sm text-white shadow-sm hover:bg-yellow-800"
+                                        >
+                                            <FontAwesomeIcon icon={faTrash} size="sm" />
                                         </button>
                                     </td>
                                 </tr>

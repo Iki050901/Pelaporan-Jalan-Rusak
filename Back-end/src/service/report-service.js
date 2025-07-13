@@ -13,6 +13,7 @@ import fs from "node:fs";
 import {logger} from "../application/logging.js";
 import axios from "axios";
 import moment from "moment-timezone";
+import PDFDocument from "pdfkit-table";
 
 const create = async (request) => {
     const report = validate(createReportValidation, request);
@@ -45,6 +46,7 @@ const create = async (request) => {
             video_url: videoPathURL,
             is_district_validate: false,
             is_pupr_validate: false,
+            district: report.district,
             damage_level: {
                 connect: {
                     id: report.damage_level_id
@@ -149,6 +151,7 @@ const update = async (request) => {
         location: report.location,
         lat: report.lat,
         long: report.long,
+        district: report.district,
         video_url: newVideoPathURL,
         is_district_validate: false,
         is_pupr_validate: false,
@@ -195,7 +198,7 @@ const update = async (request) => {
     if (
         existingImages.length > 0 &&
         (!Array.isArray(report.image_to_keep) || report.image_to_keep.length === 0) &&
-        (!Array.isArray(report.files) || report.files.length === 0)
+        (!Array.isArray(report.images) || report.images.length === 0)
     ) {
         throw new ResponseError(400, "Gambar tidak boleh kosong !");
     }
@@ -276,7 +279,7 @@ const remove = async (reportId) => {
     })
 }
 
-const list = async (limit, page, status, level_damage, user_id, role_id, isTable = true) => {
+const list = async (limit, page, status, level_damage, user_id, role_id, isTable, district, sort) => {
 
     const userInDatabase = await prismaClient.users.findFirst({
         where: {
@@ -320,7 +323,10 @@ const list = async (limit, page, status, level_damage, user_id, role_id, isTable
                     : {  }
         ),
         ...(level_damage && ({ damage_level_id: level_damage })),
-        ...(role_id === 3 && ({ user_id: user_id })),
+        ...(role_id === 3 && user_id && {
+            user_id: user_id
+        }),
+        ...(district && ({ district: district})),
         is_delete: false
     };
 
@@ -332,13 +338,21 @@ const list = async (limit, page, status, level_damage, user_id, role_id, isTable
                     : {  }
         ),
         ...(level_damage && { damage_level_id: level_damage }),
+        ...(district && ({ district: district })),
         is_delete: false,
     };
+
+    const isTableBool = isTable === true || isTable === "true";
+    const check = isTableBool ? whereClause : anotherWhereClause;
+    const sortOrder = sort === 'oldest' ? 'asc' : 'desc';
 
     const reports = await prismaClient.reports.findMany({
         skip: (page - 1) * pageSize,
         take: pageSize,
-        where: isTable ? whereClause : anotherWhereClause,
+        where: check,
+        orderBy: {
+            created_at: sortOrder,
+        },
         select: {
             id: true,
             title: true,
@@ -346,6 +360,7 @@ const list = async (limit, page, status, level_damage, user_id, role_id, isTable
             lat: true,
             long: true,
             location: true,
+            district: true,
             damage_level: true,
             validation_status: true,
             is_district_validate: true,
@@ -418,6 +433,7 @@ const get = async (reportId) => {
             lat: true,
             long: true,
             notes: true,
+            district: true,
             damage_level: true,
             validation_status: true,
             is_pupr_validate: true,
@@ -569,9 +585,9 @@ const reportDashboard = async () => {
         ...damageReports
     ] = await Promise.all([
         getReportCountByFilter(),
-        getReportCountByFilter({validation_stat_id: 1}),
-        getReportCountByFilter({validation_stat_id: {in : [2, 3, 4]} }),
-        getReportCountByFilter({validation_stat_id: 5}),
+        getReportCountByFilter({validation_stat_id: {in : [3, 2]} }),
+        getReportCountByFilter({validation_stat_id: {in : [5, 6]} }),
+        getReportCountByFilter({validation_stat_id: 7}),
     ]);
 
     return {
@@ -638,6 +654,122 @@ const getLocation = async (lat, long) => {
     return response.data;
 }
 
+const getLocationDistrict = async () => {
+    const url = 'https://alamat.thecloudalert.com/api/kecamatan/get/?d_kabkota_id=77';
+
+    const response = await axios.get(url);
+
+    return response.data;
+}
+
+const getReport = async (month, year, res) => {
+    let startDate, endDate;
+
+    if (year && month) {
+        startDate = new Date(year, month - 1, 1);
+        endDate = new Date(year, month, 0, 23, 59, 59);
+    } else if (year) {
+        startDate = new Date(year, 0, 1);
+        endDate = new Date(year, 11, 31, 23, 59, 59);
+    }
+
+    const reports = await prismaClient.reports.findMany({
+        where: {
+            is_delete: false,
+            ...(startDate &&
+                endDate && {
+                    created_at: {
+                        gte: startDate,
+                        lte: endDate,
+                    },
+                }),
+        },
+        include: {
+            user: true,
+            ReportImages: true,
+            validation_status: true,
+            damage_level: true,
+        },
+    });
+
+    // Buat dokumen PDF
+    const doc = new PDFDocument({ size: "A4", margin: 50 });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=laporan-${month || "all"}-${year}.pdf`
+    );
+    doc.pipe(res);
+
+    // Judul
+    doc.fontSize(16).text("Rekapitulasi Laporan Kerusakan Jalan", { align: "center" });
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(`Provinsi: Jawa Barat`);
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(`Kabupaten: Garut`);
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(`Dinas: Dinas Pekerjaan Umum dan Penataan Ruang (PUPR)`);
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(`Periode: ${month ? `${month}-${year}` : `Tahun ${year}`}`);
+    doc.moveDown(1);
+
+    // Tabel
+    const table = {
+        headers: ["No", "Tanggal", "Tingkat Kerusakan", "Kecamatan", "Lokasi", "Link Lokasi"],
+        rows: reports.map((report, index) => [
+            index + 1,
+            moment(report.created_at).format("DD/MM/YYYY"),
+            report.damage_level?.level || "-",
+            report.district || "-",
+            report.location || "-",
+            `https://www.google.com/maps/search/?api=1&query=${report.lat},${report.long}`
+        ]),
+    };
+
+    await doc.table(table, {
+        prepareHeader: () => doc.font("Helvetica-Bold").fontSize(10),
+        prepareRow: (row, i) => doc.font("Helvetica").fontSize(9),
+        columnSpacing: 5,
+        padding: 5,
+        columnsSize: [30, 70, 100, 150, 80, 80]
+    });
+
+    const pageWidth = doc.page.width;
+    const margin = 50;
+    const contentWidth = pageWidth - margin * 2;
+    const rightX = margin + contentWidth * 0.75; // Adjust if needed
+
+    doc.moveDown();
+    doc.text(`Garut, ${moment(Date.now()).tz("Asia/Jakarta").locale('id').format('DD MMMM, YYYY')}`, rightX, doc.y, {
+        align: 'center'
+    });
+
+    doc.moveDown();
+    doc.text(`Mengetahui`, rightX, doc.y, {
+        align: 'center'
+    });
+
+    doc.moveDown();
+    doc.font("Helvetica-Bold")
+        .text(`Kepala Bidang Bina Marga`, rightX, doc.y, {
+            align: 'center'
+        });
+
+    doc.moveDown(4);
+    doc.font("Helvetica-Bold")
+        .text(`Dadan Yuda Prayoga, ST`, rightX, doc.y, {
+            align: 'center'
+        });
+
+    doc.moveDown();
+    doc.font("Helvetica")
+        .text(`NIP. 19790506 201001 1 017`, rightX, doc.y, {
+            align: 'center'
+        });
+
+    doc.end();
+}
 
 export default {
     create,
@@ -650,4 +782,6 @@ export default {
     reportDashboard,
     reportDashboardByDamageLevel,
     getLocation,
+    getLocationDistrict,
+    getReport
 }

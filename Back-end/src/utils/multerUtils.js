@@ -5,9 +5,11 @@ import { ResponseError } from "../error/response-error.js";
 
 const imageFolder = process.env.FILE_UPLOAD_REPORT_IMAGES;
 const videoFolder = process.env.FILE_UPLOAD_REPORT_VIDEOS;
+const profileFolder = process.env.FILE_UPLOAD_PROFILE;
 
 fs.mkdirSync(imageFolder, { recursive: true });
 fs.mkdirSync(videoFolder, { recursive: true });
+fs.mkdirSync(profileFolder, { recursive: true });
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -15,6 +17,8 @@ const storage = multer.diskStorage({
             cb(null, videoFolder);
         } else if (file.fieldname === 'images') {
             cb(null, imageFolder);
+        } else if (file.fieldname === 'profile') {
+            cb(null, profileFolder);
         } else {
             cb(new ResponseError(400, 'Unknown file field!'), null);
         }

@@ -13,6 +13,7 @@ import {CKEditor} from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import {useRouter} from "next/navigation";
 import Image from "next/image";
+import AlertPopUp from "@/components/AlertPopUp";
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => {
     return {
@@ -76,6 +77,7 @@ export default function ReportFormEdit({ reportId }) {
         video: null,
         image_to_keep: []
     });
+    const [district, setDistrict] = useState("");
     const [imagePreviews, setImagePreviews] = useState([{}]);
     const [videoPreview, setVideoPreview] = useState("");
     const [errors, setErrors] = useState({});
@@ -83,6 +85,8 @@ export default function ReportFormEdit({ reportId }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState(null);
     const [zoomSrc, setZoomSrc] = useState("");
+
+    const [success, setSuccess] = useState("");
 
     const editorConfiguration = {
         toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
@@ -107,6 +111,10 @@ export default function ReportFormEdit({ reportId }) {
                 images: [],
                 video: null
             });
+
+            if (report.district) {
+                setDistrict(report.district)
+            }
 
             if (report.lat && report.long) {
                 setLat(parseFloat(report.lat));
@@ -147,6 +155,7 @@ export default function ReportFormEdit({ reportId }) {
                 );
                 const data = await response.json();
                 const locationName = data.data.display_name ?? "";
+                setDistrict(data.data.municipality ?? "")
                 
                 setForm(prev => ({
                     ...prev,
@@ -274,7 +283,8 @@ export default function ReportFormEdit({ reportId }) {
                 long: validatedData.long.toString(),
                 location: validatedData.location,
                 damage_level_id: damageLevelMap[validatedData.damage_level_id],
-                image_to_keep: validatedData.image_to_keep
+                image_to_keep: validatedData.image_to_keep,
+                district: validatedData.district,
             }));
 
             if (validatedData.images) {
@@ -291,8 +301,15 @@ export default function ReportFormEdit({ reportId }) {
                 formData.append("video", validatedData.video);
             }
 
+            console.log(formData)
+
             await updateReport(formData, reportId);
-            await router.push("/report");
+
+            setSuccess("Laporan Berhasil di Update!");
+
+            setTimeout(() => {
+                router.push("/report");
+            }, 2000);
         } catch (error) {
             console.error("Submit error:", error);
             setSubmitError(`Failed to update report. ${error}` );
@@ -323,6 +340,14 @@ export default function ReportFormEdit({ reportId }) {
                             title="Terjadi Kesalahan"
                             message={submitError}
                             error={true}
+                        />
+                    )}
+                    {success && (
+                        <AlertPopUp
+                            message={success}
+                            type="success"
+                            duration={2000}
+                            onClose={() => setSuccess("")}
                         />
                     )}
                     <div className="sm:col-span-4">
@@ -523,7 +548,7 @@ export default function ReportFormEdit({ reportId }) {
                             {lat && long && <Marker position={[lat, long]}
                                                     icon={L.icon({iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png"})}/>}
                         </MapContainer>
-                        <div className="mt-6 flex items-center justify-start gap-x-6">
+                        <div className="mt-6 flex flex-col lg:flex-row justify-start gap-x-6">
                             <div className="sm:col-span-4">
                                 <label htmlFor="lat" className="block text-sm/6 font-medium text-gray-900">Lat</label>
                                 <div className="mt-2">
@@ -564,7 +589,7 @@ export default function ReportFormEdit({ reportId }) {
                                     {displayErrorForm("long", errors, touched)}
                                 </div>
                             </div>
-                            <div className="sm:col-span-4 w-4xl">
+                            <div className="sm:col-span-4 lg:w-4xl">
                                 <label htmlFor="location" className="block text-sm/6 font-medium text-gray-900">Lokasi</label>
                                 <div className="mt-2">
                                     <div

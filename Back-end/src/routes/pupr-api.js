@@ -39,6 +39,8 @@ puprRouter.get('/api/pupr/users',
     rolesMiddleware(['PUPR']),
     usersController.list)
 
+puprRouter.get('/api/pupr/report/export',
+    reportController.getReport)
 export {
     puprRouter
 }

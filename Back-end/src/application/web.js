@@ -11,13 +11,13 @@ import path from "path";
 import * as process from "node:process"
 
 const corsOptions =  {
-    origin: '*',
-    method: 'POST,GET,PATCH,DELETE,PUT',
-    credentials: false,
+    origin: "http://localhost:3000",
+    method: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT'],
+    credentials: true
 }
 
 export const web = express();
-web.use(express.json()); // ✅ HARUS sebelum router
+web.use(express.json());
 web.use(express.urlencoded({ extended: true }));
 web.use(cors(corsOptions))
 web.use(passport.initialize());

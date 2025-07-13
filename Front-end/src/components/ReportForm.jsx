@@ -12,6 +12,8 @@ import {AlertInfo} from "@/components/AlertInfo";
 import {CKEditor} from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import {useRouter} from "next/navigation";
+import Image from "next/image";
+import AlertPopUp from "@/components/AlertPopUp";
 
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => {
     return {
@@ -68,14 +70,16 @@ export default function ReportForm() {
         long:  107.908699,
         location: "",
         images: [],
-        video: null
+        video: null,
     });
+    const [district, setDistrict] = useState("");
     const [imagePreviews, setImagePreviews] = useState([]);
     const [videoPreview, setVideoPreview] = useState(null);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState(null);
+    const [success, setSuccess] = useState("");
 
     const editorConfiguration = {
         toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'undo', 'redo'],
@@ -98,6 +102,7 @@ export default function ReportForm() {
                 );
                 const data = await response.json();
                 const locationName = data.data.display_name ?? "";
+                setDistrict(data.data.address.municipality ?? "");
                 
                 setForm(prev => ({
                     ...prev,
@@ -157,6 +162,7 @@ export default function ReportForm() {
         }
 
         setSubmitError(null);
+        console.log(district)
 
         try {
             setIsSubmitting(true);
@@ -173,6 +179,7 @@ export default function ReportForm() {
                 long: validatedData.long.toString(),
                 location: validatedData.location,
                 damage_level_id: damageLevelMap[validatedData.damage_level_id],
+                district: district
             }));
 
             if (validatedData.images) {
@@ -190,7 +197,12 @@ export default function ReportForm() {
             }
 
             await createReport(formData);
-            await router.push("/report");
+
+            setSuccess("Berhasil membuat laporan!");
+
+            setTimeout(() => {
+                router.push("/history");
+            }, 2000);
         } catch (error) {
             console.error("Submit error:", error);
             setSubmitError("Failed to create report. Please try again." );
@@ -216,6 +228,14 @@ export default function ReportForm() {
                         title="Terjadi Kesalahan"
                         message={submitError}
                         error={true}
+                    />
+                )}
+                {success && (
+                    <AlertPopUp
+                        message={success}
+                        type="success"
+                        duration={2000}
+                        onClose={() => setSuccess("")}
                     />
                 )}
                 <div className="sm:col-span-4">
@@ -274,12 +294,14 @@ export default function ReportForm() {
                 {imagePreviews.length > 0 && (
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
                         {imagePreviews.map((src, idx) => (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                key={idx}
+                            <Image
                                 src={src}
-                                alt={`Preview ${idx}`}
-                                className="h-32 w-full object-cover rounded border border-blue-800"
+                                key={idx}
+                                alt="foto laporan"
+                                width={100}
+                                height={100}
+                                className="w-42 h-42 rounded shadow border border-black object-contain"
+                                unoptimized
                             />
                         ))}
                     </div>
@@ -317,12 +339,13 @@ export default function ReportForm() {
                     </div>
                 </div>
                 {videoPreview && (
-                    <div className="mt-4">
+                    <div className="mt-4 relative w-64 h-64">
                         <video
-                            src={videoPreview}
                             controls
-                            className="w-full max-w-md rounded border"
-                        />
+                            className="w-full h-full rounded shadow border object-contain">
+                            <source src={videoPreview} type="video/mp4" />
+                            Video tidak dapat diputar.
+                        </video>
                     </div>
                 )}
                 <div className="col-span-full mt-10">

@@ -25,6 +25,7 @@ publicRouter.get('/api/report/dashboard', reportController.reportDashboard)
 publicRouter.get('/api/report/dashboard/by-level', reportController.reportDashboardByDamageLevel)
 
 publicRouter.get('/api/reverse-geocode', reportController.getLocation)
+publicRouter.get('/api/location-district', reportController.getLocationDistrict)
 
 export {
     publicRouter

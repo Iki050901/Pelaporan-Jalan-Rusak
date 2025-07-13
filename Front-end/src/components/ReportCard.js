@@ -16,7 +16,7 @@ export default function ReportCard({ title, id, location, description, date, sta
     const safeHtml = DOMPurify.sanitize(description);
 
     return (
-        <div className="flex flex-col md:flex-row md:justify-between items-start bg-white rounded-xl shadow-md p-4 md:p-8 mb-4 gap-4">
+        <div className="flex flex-col md:flex-row md:justify-between items-start bg-white rounded-xl shadow-lg drop-shadow p-4 md:p-8 mb-4 gap-4">
             {/* Info section */}
             <div className="flex-1 w-full">
                 <div className="flex flex-wrap text-sm text-gray-500 gap-4">

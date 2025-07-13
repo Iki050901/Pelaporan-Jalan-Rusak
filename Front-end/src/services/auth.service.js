@@ -41,7 +41,7 @@ class AuthService {
 
     static async updateUser(formData) {
         try {
-            const response = await axios.put(getApiUrl(API_CONFIG.endpoints.user.profile), formData)
+            const response = await axios.putForm(getApiUrl(API_CONFIG.endpoints.user.profile), formData)
 
             return response.data.data;
         } catch (error) {
@@ -52,6 +52,16 @@ class AuthService {
     static async getUser() {
         try {
             const response = await axios.get(getApiUrl(API_CONFIG.endpoints.user.profile))
+
+            return response.data.data;
+        } catch (error) {
+            throw error.response?.data.errors || {};
+        }
+    }
+
+    static async registerUser(formData) {
+        try {
+            const response = await axios.post(getApiUrl(API_CONFIG.endpoints.auth.register), formData)
 
             return response.data.data;
         } catch (error) {

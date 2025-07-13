@@ -34,8 +34,16 @@ const loginGoogle = async (req, res, next) => {
 const update = async (req, res, next) => {
     try {
         const id = req.user.id;
-        const request = req.body;
+        const { profile_data } = req.body;
+        const request = JSON.parse(profile_data);
         request.id = id;
+        const avatar = req.files['avatar'] ? req.files['avatar'][0] : undefined;
+        request.avatar = avatar ? {
+            filename: avatar.filename,
+            path: avatar.path,
+            mimetype: avatar.mimetype,
+            size: avatar.size
+        } : undefined;
         const result = await authService.update(request);
         res.status(200).json({
             data: result,
