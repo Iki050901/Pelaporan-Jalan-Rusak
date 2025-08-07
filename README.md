@@ -40,7 +40,7 @@ Repositori ini berisi **aplikasi web full-stack** untuk pelaporan jalan rusak di
 
 **⚙️ Instalasi & Menjalankan Proyek**
 1. Clone repositori
-   git clone https://github.com/username/lapor-jalan-fe.git
+   git clone https://github.com/Iki050901/Pelaporan-Jalan-Rusak.git
 2. Menjalankan Backend
    - cd Backend
    - npm install 
