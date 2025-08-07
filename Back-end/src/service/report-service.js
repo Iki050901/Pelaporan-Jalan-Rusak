@@ -585,9 +585,10 @@ const reportDashboard = async () => {
         ...damageReports
     ] = await Promise.all([
         getReportCountByFilter(),
-        getReportCountByFilter({validation_stat_id: {in : [3, 2]} }),
-        getReportCountByFilter({validation_stat_id: {in : [5, 6]} }),
-        getReportCountByFilter({validation_stat_id: 7}),
+        getReportCountByFilter({validation_stat_id: 1 }),
+        getReportCountByFilter({validation_stat_id: 3 }),
+        getReportCountByFilter({validation_stat_id: {in : [5, 7]} }),
+        
     ]);
 
     return {

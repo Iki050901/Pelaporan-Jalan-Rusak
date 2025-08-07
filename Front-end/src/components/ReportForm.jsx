@@ -102,7 +102,7 @@ export default function ReportForm() {
                 );
                 const data = await response.json();
                 const locationName = data.data.display_name ?? "";
-                setDistrict(data.data.address.municipality ?? "");
+                setDistrict(data.data.address.municipality ?? data.data.address.subdistrict);
                 
                 setForm(prev => ({
                     ...prev,

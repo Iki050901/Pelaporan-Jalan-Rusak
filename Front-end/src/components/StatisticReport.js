@@ -39,8 +39,8 @@ export default function StatisticReport() {
 
     const stats = [
         { icon: faListAlt, value: data?.total_report, label: 'Jumlah Laporan' },
-        { icon: faBars, value: data?.total_active_report, label: 'Verifikasi Kecamatan' },
-        { icon: faList, value: data?.total_report_process, label: 'Diteruskan PUPR' },
+        { icon: faBars, value: data?.total_active_report, label: 'Menunggu Validasi Kecamatan' },
+        { icon: faList, value: data?.total_report_process, label: 'Menunggu Validasi PUPR' },
         { icon: faCheckSquare, value: data?.total_report_done, label: 'Laporan Selesai' },
     ];
 
